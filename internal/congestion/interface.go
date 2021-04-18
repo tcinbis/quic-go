@@ -25,3 +25,27 @@ type SendAlgorithmWithDebugInfos interface {
 	InRecovery() bool
 	GetCongestionWindow() protocol.ByteCount
 }
+
+type CubicInterface interface {
+	Reset()
+	OnApplicationLimited()
+	CongestionWindowAfterPacketLoss(currentCongestionWindow protocol.ByteCount) protocol.ByteCount
+	CongestionWindowAfterAck(ackedBytes protocol.ByteCount, currentCongestionWindow protocol.ByteCount, delayMin time.Duration, eventTime time.Time) protocol.ByteCount
+	SetNumConnections(n int)
+}
+
+type FlowTeleCongestionControlModifier interface {
+	ApplyControl(beta float64, cwnd_adjust int64, cwnd_max_adjust int64, use_conservative_allocation bool) bool
+
+	SetFixedRate(rateInBytePerSecond Bandwidth)
+}
+
+type FlowTeleSendAlgorithm interface {
+	SendAlgorithm
+	FlowTeleCongestionControlModifier
+}
+
+type FlowteleSendAlgorithmWithDebugInfos interface {
+	SendAlgorithmWithDebugInfos
+	FlowTeleCongestionControlModifier
+}

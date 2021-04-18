@@ -22,7 +22,7 @@ const (
 type cubicSender struct {
 	hybridSlowStart HybridSlowStart
 	rttStats        *utils.RTTStats
-	cubic           *Cubic
+	cubic           CubicInterface
 	pacer           *pacer
 	clock           Clock
 
