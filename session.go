@@ -287,6 +287,7 @@ var newSession = func(
 			s.version,
 		)
 	} else {
+		fmt.Printf("FLOWTELE SESSION: Creating FlowTeleAckHandler\n")
 		s.sentPacketHandler, s.receivedPacketHandler = ackhandler.NewFlowTeleAckHandler(
 			0,
 			s.rttStats,
