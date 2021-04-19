@@ -7,6 +7,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/lucas-clemente/quic-go/flowtele"
 	"github.com/lucas-clemente/quic-go/internal/handshake"
 	"github.com/lucas-clemente/quic-go/internal/protocol"
 	"github.com/lucas-clemente/quic-go/logging"
@@ -199,6 +200,13 @@ type Session interface {
 	ReceiveMessage() ([]byte, error)
 }
 
+type FlowTeleSession interface {
+	Session
+
+	ApplyControl(beta float64, cwnd_adjust int64, cwnd_max_adjust int64, use_conservative_allocation bool) bool
+	SetFixedRate(rateInBytePerSecond uint64)
+}
+
 // An EarlySession is a session that is handshaking.
 // Data sent during the handshake is encrypted using the forward secure keys.
 // When using client certificates, the client's identity is only verified
@@ -292,6 +300,7 @@ type Config struct {
 	// Datagrams will only be available when both peers enable datagram support.
 	EnableDatagrams bool
 	Tracer          logging.Tracer
+	FlowTeleSignal	*flowtele.FlowTeleSignal
 }
 
 // ConnectionState records basic details about a QUIC connection
