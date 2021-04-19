@@ -119,5 +119,6 @@ func populateConfig(config *Config) *Config {
 		DisablePathMTUDiscovery:          config.DisablePathMTUDiscovery,
 		DisableVersionNegotiationPackets: config.DisableVersionNegotiationPackets,
 		Tracer:                           config.Tracer,
+		FlowTeleSignal:                        config.FlowTeleSignal, // can be nil if we are not using FlowTele!
 	}
 }

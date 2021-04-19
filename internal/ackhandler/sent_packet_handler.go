@@ -3,6 +3,7 @@ package ackhandler
 import (
 	"errors"
 	"fmt"
+	"github.com/lucas-clemente/quic-go/flowtele"
 	"time"
 
 	"github.com/lucas-clemente/quic-go/internal/congestion"
@@ -96,6 +97,10 @@ type sentPacketHandler struct {
 	logger utils.Logger
 }
 
+type flowTeleSentPacketHandler struct {
+	sentPacketHandler
+}
+
 var (
 	_ SentPacketHandler = &sentPacketHandler{}
 	_ sentPacketTracker = &sentPacketHandler{}
@@ -129,6 +134,37 @@ func newSentPacketHandler(
 		tracer:                         tracer,
 		logger:                         logger,
 	}
+}
+
+func newFlowTeleSentPacketHandler(
+	initialPacketNumber protocol.PacketNumber,
+	rttStats *utils.RTTStats,
+	pers protocol.Perspective,
+	traceCallback func(quictrace.Event),
+	tracer logging.ConnectionTracer,
+	logger utils.Logger,
+	signal *flowtele.FlowTeleSignal,
+) *flowTeleSentPacketHandler {
+	congestion := congestion.NewFlowTeleCubicSender(
+		congestion.DefaultClock{},
+		rttStats,
+		true, // use Reno
+		tracer,
+		signal,
+	)
+
+	// Create a sentPacketHandler and then update the congestion control algorithm to flowTeleCubicSender
+	sph := newSentPacketHandler(initialPacketNumber, rttStats, pers, traceCallback, tracer, logger)
+	sph.congestion = congestion
+	return &flowTeleSentPacketHandler{sentPacketHandler: *sph}
+}
+
+func (s *flowTeleSentPacketHandler) ApplyControl(beta float64, cwnd_adjust int64, cwnd_max_adjust int64, use_conservative_allocation bool) bool {
+	return s.congestion.(congestion.FlowteleSendAlgorithmWithDebugInfos).ApplyControl(beta, cwnd_adjust, cwnd_max_adjust, use_conservative_allocation)
+}
+
+func (s *flowTeleSentPacketHandler) SetFixedRate(rateInBitsPerSecond congestion.Bandwidth) {
+	s.congestion.(congestion.FlowteleSendAlgorithmWithDebugInfos).SetFixedRate(rateInBitsPerSecond)
 }
 
 func (h *sentPacketHandler) DropPackets(encLevel protocol.EncryptionLevel) {
