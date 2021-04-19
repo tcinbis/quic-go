@@ -295,7 +295,8 @@ var newSession = func(
 			s.logger,
 			s.version,
 		)
-	} else{
+	} else {
+		fmt.Printf("FLOWTELE SESSION: Creating FlowTeleAckHandler\n")
 		s.sentPacketHandler, s.receivedPacketHandler = ackhandler.NewFlowTeleAckHandler(
 			0,
 			getMaxPacketSize(s.conn.RemoteAddr()),
