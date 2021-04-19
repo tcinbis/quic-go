@@ -118,5 +118,6 @@ func populateConfig(config *Config) *Config {
 		EnableDatagrams:                config.EnableDatagrams,
 		DisablePathMTUDiscovery:        config.DisablePathMTUDiscovery,
 		Tracer:                         config.Tracer,
+		FlowTeleSignal: 								config.FlowTeleSignal, // can be nil if we are not using FlowTele!
 	}
 }

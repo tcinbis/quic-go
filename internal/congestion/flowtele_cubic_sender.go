@@ -2,24 +2,18 @@ package congestion
 
 import (
 	"fmt"
+	"github.com/lucas-clemente/quic-go/flowtele"
 	"github.com/lucas-clemente/quic-go/internal/protocol"
 	"github.com/lucas-clemente/quic-go/internal/utils"
 	"github.com/lucas-clemente/quic-go/logging"
 	"time"
 )
 
-// TODO: Check if this is the proper location for the struct
-type FlowTeleSignal struct {
-	NewSrttMeasurement func(t time.Time, srtt time.Duration)
-	PacketsLost        func(t time.Time, newSlowStartThreshold uint64)
-	PacketsAcked       func(t time.Time, congestionWindow uint64, packetsInFlight uint64, ackedBytes uint64)
-}
-
 // flowTeleCubicSender works as a thin wrapper around cubicSender but can intercept any exported method.
 type flowTeleCubicSender struct {
 	cubicSender
 
-	flowTeleSignalInterface *FlowTeleSignal
+	flowTeleSignalInterface *flowtele.FlowTeleSignal
 	useFixedBandwidth       bool
 	fixedBandwidth          Bandwidth
 }
@@ -28,7 +22,7 @@ type flowTeleCubicSender struct {
 var _ FlowTeleSendAlgorithm = &flowTeleCubicSender{}
 var _ FlowteleSendAlgorithmWithDebugInfos = &flowTeleCubicSender{}
 
-func NewFlowTeleCubicSender(clock Clock, rttStats *utils.RTTStats, reno bool, tracer logging.ConnectionTracer, flowTeleSignal *FlowTeleSignal) *flowTeleCubicSender {
+func NewFlowTeleCubicSender(clock Clock, rttStats *utils.RTTStats, reno bool, tracer logging.ConnectionTracer, flowTeleSignal *flowtele.FlowTeleSignal) *flowTeleCubicSender {
 	cuSender := newCubicSender(clock, rttStats, reno, initialCongestionWindow, maxCongestionWindow, tracer)
 	cuSender.cubic = NewFlowTeleCubic(clock)
 	return &flowTeleCubicSender{

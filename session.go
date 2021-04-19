@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"github.com/lucas-clemente/quic-go/internal/congestion"
 	"io"
 	"net"
 	"reflect"
@@ -288,15 +289,29 @@ var newSession = func(
 	)
 	s.preSetup()
 	s.ctx, s.ctxCancel = context.WithCancel(context.WithValue(context.Background(), SessionTracingKey, tracingID))
-	s.sentPacketHandler, s.receivedPacketHandler = ackhandler.NewAckHandler(
-		0,
-		getMaxPacketSize(s.conn.RemoteAddr()),
-		s.rttStats,
-		s.perspective,
-		s.tracer,
-		s.logger,
-		s.version,
-	)
+	// Check if the FlowTeleSignal field is populated
+	if s.config.FlowTeleSignal == nil {
+		s.sentPacketHandler, s.receivedPacketHandler = ackhandler.NewAckHandler(
+			0,
+			getMaxPacketSize(s.conn.RemoteAddr()),
+			s.rttStats,
+			s.perspective,
+			s.tracer,
+			s.logger,
+			s.version,
+		)
+	} else {
+		s.sentPacketHandler, s.receivedPacketHandler = ackhandler.NewFlowTeleAckHandler(
+			0,
+			getMaxPacketSize(s.conn.RemoteAddr()),
+			s.rttStats,
+			s.perspective,
+			s.tracer,
+			s.logger,
+			s.version,
+			s.config.FlowTeleSignal
+		)
+	}
 	initialStream := newCryptoStream()
 	handshakeStream := newCryptoStream()
 	params := &wire.TransportParameters{
@@ -415,15 +430,29 @@ var newClientSession = func(
 	)
 	s.preSetup()
 	s.ctx, s.ctxCancel = context.WithCancel(context.WithValue(context.Background(), SessionTracingKey, tracingID))
-	s.sentPacketHandler, s.receivedPacketHandler = ackhandler.NewAckHandler(
-		initialPacketNumber,
-		getMaxPacketSize(s.conn.RemoteAddr()),
-		s.rttStats,
-		s.perspective,
-		s.tracer,
-		s.logger,
-		s.version,
-	)
+	// Check if the FlowTeleSignal field is populated
+	if s.config.FlowTeleSignal == nil {
+		s.sentPacketHandler, s.receivedPacketHandler = ackhandler.NewAckHandler(
+			initialPacketNumber,
+			getMaxPacketSize(s.conn.RemoteAddr()),
+			s.rttStats,
+			s.perspective,
+			s.tracer,
+			s.logger,
+			s.version,
+		)
+	} else{
+		s.sentPacketHandler, s.receivedPacketHandler = ackhandler.NewFlowTeleAckHandler(
+			initialPacketNumber,
+			getMaxPacketSize(s.conn.RemoteAddr()),
+			s.rttStats,
+			s.perspective,
+			s.tracer,
+			s.logger,
+			s.version,
+			s.config.FlowTeleSignal,
+		)
+	}
 	initialStream := newCryptoStream()
 	handshakeStream := newCryptoStream()
 	params := &wire.TransportParameters{
@@ -498,11 +527,27 @@ var newClientSession = func(
 	return s
 }
 
+func (s *session) ApplyControl(beta float64, cwnd_adjust int64, cwnd_max_adjust int64, use_conservative_allocation bool) bool {
+	fsph, ok := s.sentPacketHandler.(ackhandler.FlowTeleSentPacketHandler)
+	if !ok {
+		panic("sentPacketHandler of session is not FlowTeleSentPacketHandler")
+	}
+	return fsph.ApplyControl(beta, cwnd_adjust, cwnd_max_adjust, use_conservative_allocation)
+}
+
+func (s *session) SetFixedRate(rateInBitsPerSecond uint64) {
+	fsph, ok := s.sentPacketHandler.(ackhandler.FlowTeleSentPacketHandler)
+	if !ok {
+		panic("sentPacketHandler of session is not FlowTeleSentPacketHandler")
+	}
+	fsph.SetFixedRate(congestion.Bandwidth(rateInBitsPerSecond))
+}
+
 func (s *session) preSetup() {
 	s.sendQueue = newSendQueue(s.conn)
 	s.retransmissionQueue = newRetransmissionQueue(s.version)
 	s.frameParser = wire.NewFrameParser(s.config.EnableDatagrams, s.version)
-	s.rttStats = &utils.RTTStats{}
+	s.rttStats = &utils.RTTStats{FlowTeleSignal: s.config.FlowTeleSignal}
 	s.connFlowController = flowcontrol.NewConnectionFlowController(
 		protocol.ByteCount(s.config.InitialConnectionReceiveWindow),
 		protocol.ByteCount(s.config.MaxConnectionReceiveWindow),
