@@ -2,6 +2,7 @@ package quic
 
 import (
 	"errors"
+
 	"github.com/lucas-clemente/quic-go/internal/protocol"
 )
 

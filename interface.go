@@ -2,10 +2,11 @@ package quic
 
 import (
 	"context"
-	"github.com/lucas-clemente/quic-go/flowtele"
 	"io"
 	"net"
 	"time"
+
+	"github.com/lucas-clemente/quic-go/flowtele"
 
 	"github.com/lucas-clemente/quic-go/internal/handshake"
 	"github.com/lucas-clemente/quic-go/internal/protocol"
@@ -196,7 +197,7 @@ type Session interface {
 type FlowTeleSession interface {
 	Session
 
-	ApplyControl(beta float64, cwnd_adjust int64, cwnd_max_adjust int64, use_conservative_allocation bool) bool
+	ApplyControl(beta float64, cwnd_adjust int64, cwnd_max_adjust int64, use_conservative_allocation bool) bool //nolint:stylecheck
 	SetFixedRate(rateInBytePerSecond uint64)
 }
 

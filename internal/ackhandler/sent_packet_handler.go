@@ -3,8 +3,9 @@ package ackhandler
 import (
 	"errors"
 	"fmt"
-	"github.com/lucas-clemente/quic-go/flowtele"
 	"time"
+
+	"github.com/lucas-clemente/quic-go/flowtele"
 
 	"github.com/lucas-clemente/quic-go/internal/congestion"
 	"github.com/lucas-clemente/quic-go/internal/protocol"
@@ -151,7 +152,7 @@ func newFlowTeleSentPacketHandler(
 	return &flowTeleSentPacketHandler{sentPacketHandler: *sph}
 }
 
-func (s *flowTeleSentPacketHandler) ApplyControl(beta float64, cwnd_adjust int64, cwnd_max_adjust int64, use_conservative_allocation bool) bool {
+func (s *flowTeleSentPacketHandler) ApplyControl(beta float64, cwnd_adjust int64, cwnd_max_adjust int64, use_conservative_allocation bool) bool { //nolint:stylecheck
 	return s.congestion.(congestion.FlowteleSendAlgorithmWithDebugInfos).ApplyControl(beta, cwnd_adjust, cwnd_max_adjust, use_conservative_allocation)
 }
 
