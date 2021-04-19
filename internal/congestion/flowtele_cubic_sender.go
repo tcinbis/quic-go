@@ -2,11 +2,12 @@ package congestion
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/lucas-clemente/quic-go/flowtele"
 	"github.com/lucas-clemente/quic-go/internal/protocol"
 	"github.com/lucas-clemente/quic-go/internal/utils"
 	"github.com/lucas-clemente/quic-go/logging"
-	"time"
 )
 
 // flowTeleCubicSender works as a thin wrapper around cubicSender but can intercept any exported method.
@@ -19,8 +20,10 @@ type flowTeleCubicSender struct {
 }
 
 // Test whether we can assign flowTeleCubicSender to the FlowTeleSendAlgorithm interface
-var _ FlowTeleSendAlgorithm = &flowTeleCubicSender{}
-var _ FlowteleSendAlgorithmWithDebugInfos = &flowTeleCubicSender{}
+var (
+	_ FlowTeleSendAlgorithm               = &flowTeleCubicSender{}
+	_ FlowteleSendAlgorithmWithDebugInfos = &flowTeleCubicSender{}
+)
 
 func NewFlowTeleCubicSender(clock Clock, rttStats *utils.RTTStats, reno bool, tracer logging.ConnectionTracer, flowTeleSignal *flowtele.FlowTeleSignal) *flowTeleCubicSender {
 	cuSender := newCubicSender(clock, rttStats, reno, initialCongestionWindow, maxCongestionWindow, tracer)
@@ -36,7 +39,7 @@ func (c *flowTeleCubicSender) slowStartThresholdUpdated() {
 	c.flowTeleSignalInterface.PacketsLost(time.Now(), uint64(c.cubicSender.slowStartThreshold))
 }
 
-func (c *flowTeleCubicSender) ApplyControl(beta float64, cwnd_adjust int64, cwnd_max_adjust int64, use_conservative_allocation bool) bool {
+func (c *flowTeleCubicSender) ApplyControl(beta float64, cwnd_adjust int64, cwnd_max_adjust int64, use_conservative_allocation bool) bool { //nolint:stylecheck
 	fmt.Printf("FLOWTELE CC: ApplyControl(%f, %d, %d, %t)\n", beta, cwnd_adjust, cwnd_max_adjust, use_conservative_allocation)
 	flowTeleCubic := c.checkFlowTeleCubicAlgorithm()
 

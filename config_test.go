@@ -2,10 +2,11 @@ package quic
 
 import (
 	"fmt"
-	"github.com/lucas-clemente/quic-go/flowtele"
 	"net"
 	"reflect"
 	"time"
+
+	"github.com/lucas-clemente/quic-go/flowtele"
 
 	mocklogging "github.com/lucas-clemente/quic-go/internal/mocks/logging"
 	"github.com/lucas-clemente/quic-go/internal/protocol"
@@ -178,26 +179,26 @@ var _ = Describe("Config", func() {
 		})
 
 		It("sets FlowTeleSignal if it was passed in via config", func() {
-			var test_srtt, test_lost, test_acked bool
+			var testSRTT, testLost, testAcked bool
 			c := populateClientConfig(&Config{FlowTeleSignal: &flowtele.FlowTeleSignal{
 				NewSrttMeasurement: func(t time.Time, srtt time.Duration) {
-					test_srtt = true
+					testSRTT = true
 				},
 				PacketsLost: func(t time.Time, newSlowStartThreshold uint64) {
-					test_lost = true
+					testLost = true
 				},
 				PacketsAcked: func(t time.Time, congestionWindow uint64, packetsInFlight uint64, ackedBytes uint64) {
-					test_acked = true
+					testAcked = true
 				},
 			}}, true)
 			Expect(c.FlowTeleSignal).NotTo(BeNil())
 
 			c.FlowTeleSignal.NewSrttMeasurement(time.Now(), 100*time.Millisecond)
-			Expect(test_srtt).To(BeTrue())
+			Expect(testSRTT).To(BeTrue())
 			c.FlowTeleSignal.PacketsLost(time.Now(), 0)
-			Expect(test_lost).To(BeTrue())
+			Expect(testLost).To(BeTrue())
 			c.FlowTeleSignal.PacketsAcked(time.Now(), 100, 100, 100)
-			Expect(test_acked).To(BeTrue())
+			Expect(testAcked).To(BeTrue())
 		})
 	})
 })
