@@ -12,7 +12,7 @@ import (
 
 // flowTeleCubicSender works as a thin wrapper around cubicSender but can intercept any exported method.
 type flowTeleCubicSender struct {
-	cubicSender
+	cubicSend cubicSender
 
 	flowTeleSignalInterface *flowtele.FlowTeleSignal
 	useFixedBandwidth       bool
@@ -29,14 +29,14 @@ func NewFlowTeleCubicSender(clock Clock, rttStats *utils.RTTStats, reno bool, tr
 	cuSender := newCubicSender(clock, rttStats, reno, initialCongestionWindow, maxCongestionWindow, tracer)
 	cuSender.cubic = NewFlowTeleCubic(clock)
 	return &flowTeleCubicSender{
-		cubicSender:             *cuSender,
+		cubicSend:               *cuSender,
 		flowTeleSignalInterface: flowTeleSignal,
 	}
 }
 
 func (c *flowTeleCubicSender) slowStartThresholdUpdated() {
 	// todo(cyrill) do we need the actual packet received time or is time.Now() sufficient?
-	c.flowTeleSignalInterface.PacketsLost(time.Now(), uint64(c.cubicSender.slowStartThreshold))
+	c.flowTeleSignalInterface.PacketsLost(time.Now(), uint64(c.cubicSend.slowStartThreshold))
 }
 
 func (c *flowTeleCubicSender) ApplyControl(beta float64, cwnd_adjust int64, cwnd_max_adjust int64, use_conservative_allocation bool) bool { //nolint:stylecheck
@@ -57,47 +57,64 @@ func (c *flowTeleCubicSender) SetFixedRate(rateInBitsPerSecond Bandwidth) {
 }
 
 func (c *flowTeleCubicSender) TimeUntilSend(bytesInFlight protocol.ByteCount) time.Time {
-	return c.cubicSender.TimeUntilSend(bytesInFlight)
+	return c.cubicSend.TimeUntilSend(bytesInFlight)
 }
 
 func (c *flowTeleCubicSender) HasPacingBudget() bool {
-	return c.cubicSender.HasPacingBudget()
+	return c.cubicSend.HasPacingBudget()
 }
 
 func (c *flowTeleCubicSender) OnPacketSent(sentTime time.Time, bytesInFlight protocol.ByteCount, packetNumber protocol.PacketNumber, bytes protocol.ByteCount, isRetransmittable bool) {
-	c.cubicSender.OnPacketSent(sentTime, bytesInFlight, packetNumber, bytes, isRetransmittable)
+	c.cubicSend.OnPacketSent(sentTime, bytesInFlight, packetNumber, bytes, isRetransmittable)
 }
 
 func (c *flowTeleCubicSender) CanSend(bytesInFlight protocol.ByteCount) bool {
-	return c.cubicSender.CanSend(bytesInFlight)
+	return c.cubicSend.CanSend(bytesInFlight)
 }
 
 func (c *flowTeleCubicSender) MaybeExitSlowStart() {
-	c.cubicSender.MaybeExitSlowStart()
+	c.cubicSend.MaybeExitSlowStart()
 }
 
 func (c *flowTeleCubicSender) OnPacketAcked(number protocol.PacketNumber, ackedBytes protocol.ByteCount, priorInFlight protocol.ByteCount, eventTime time.Time) {
-	c.cubicSender.OnPacketAcked(number, ackedBytes, priorInFlight, eventTime)
-	c.flowTeleSignalInterface.PacketsAcked(time.Now(), uint64(c.cubicSender.GetCongestionWindow()), uint64(priorInFlight), uint64(ackedBytes))
+	c.cubicSend.OnPacketAcked(number, ackedBytes, priorInFlight, eventTime)
+	c.flowTeleSignalInterface.PacketsAcked(time.Now(), uint64(c.cubicSend.GetCongestionWindow()), uint64(priorInFlight), uint64(ackedBytes))
 }
 
 func (c *flowTeleCubicSender) OnPacketLost(number protocol.PacketNumber, lostBytes protocol.ByteCount, priorInFlight protocol.ByteCount) {
-	c.cubicSender.OnPacketLost(number, lostBytes, priorInFlight)
+	c.cubicSend.OnPacketLost(number, lostBytes, priorInFlight)
 	c.slowStartThresholdUpdated()
 }
 
 func (c *flowTeleCubicSender) OnRetransmissionTimeout(packetsRetransmitted bool) {
-	c.cubicSender.OnRetransmissionTimeout(packetsRetransmitted)
+	c.cubicSend.OnRetransmissionTimeout(packetsRetransmitted)
 	c.slowStartThresholdUpdated()
 }
 
 func (c *flowTeleCubicSender) OnConnectionMigration() {
-	c.cubicSender.OnConnectionMigration()
+	c.cubicSend.OnConnectionMigration()
 	c.slowStartThresholdUpdated()
 }
 
+func (c *flowTeleCubicSender) InSlowStart() bool {
+	return c.cubicSend.InSlowStart()
+}
+
+func (c *flowTeleCubicSender) InRecovery() bool {
+	return c.cubicSend.InRecovery()
+}
+
+func (c *flowTeleCubicSender) GetCongestionWindow() protocol.ByteCount {
+	if c.useFixedBandwidth {
+		cwnd := BandwidthFromDelta(protocol.ByteCount(c.fixedBandwidth), c.cubicSend.rttStats.LatestRTT())
+		fmt.Printf("Setting CWND Window to %d\n", cwnd)
+		return protocol.ByteCount(cwnd)
+	}
+	return c.cubicSend.GetCongestionWindow()
+}
+
 func (c *flowTeleCubicSender) checkFlowTeleCubicAlgorithm() *FlowTeleCubic {
-	f, ok := c.cubicSender.cubic.(*FlowTeleCubic)
+	f, ok := c.cubicSend.cubic.(*FlowTeleCubic)
 	if !ok {
 		panic("Received non-flowtele cubic sender.")
 	}
