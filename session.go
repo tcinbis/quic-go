@@ -277,6 +277,7 @@ var newSession = func(
 	s.preSetup()
 	// Check if the FlowTeleSignal field is populated
 	if s.config.FlowTeleSignal == nil {
+		fmt.Printf("SESSION: Creating AckHandler\n")
 		s.sentPacketHandler, s.receivedPacketHandler = ackhandler.NewAckHandler(
 			0,
 			s.rttStats,
