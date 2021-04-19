@@ -173,5 +173,28 @@ var _ = Describe("Config", func() {
 			c := populateClientConfig(&Config{}, true)
 			Expect(c.ConnectionIDLength).To(BeZero())
 		})
+
+		It("sets FlowTeleSignal if it was passed in via config", func() {
+			var test_srtt, test_lost, test_acked bool
+			c := populateClientConfig(&Config{FlowTeleSignal: &flowtele.FlowTeleSignal{
+				NewSrttMeasurement: func(t time.Time, srtt time.Duration) {
+					test_srtt = true
+				},
+				PacketsLost: func(t time.Time, newSlowStartThreshold uint64) {
+					test_lost = true
+				},
+				PacketsAcked: func(t time.Time, congestionWindow uint64, packetsInFlight uint64, ackedBytes uint64) {
+					test_acked = true
+				},
+			}}, true)
+			Expect(c.FlowTeleSignal).NotTo(BeNil())
+
+			c.FlowTeleSignal.NewSrttMeasurement(time.Now(), 100*time.Millisecond)
+			Expect(test_srtt).To(BeTrue())
+			c.FlowTeleSignal.PacketsLost(time.Now(), 0)
+			Expect(test_lost).To(BeTrue())
+			c.FlowTeleSignal.PacketsAcked(time.Now(), 100, 100, 100)
+			Expect(test_acked).To(BeTrue())
+		})
 	})
 })
