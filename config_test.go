@@ -2,6 +2,7 @@ package quic
 
 import (
 	"fmt"
+	"github.com/lucas-clemente/quic-go/flowtele"
 	"net"
 	"reflect"
 	"time"
@@ -74,6 +75,8 @@ var _ = Describe("Config", func() {
 				f.Set(reflect.ValueOf(quictrace.NewTracer()))
 			case "Tracer":
 				f.Set(reflect.ValueOf(mocklogging.NewMockTracer(mockCtrl)))
+			case "FlowTeleSignal":
+				f.Set(reflect.ValueOf(&flowtele.FlowTeleSignal{}))
 			default:
 				Fail(fmt.Sprintf("all fields must be accounted for, but saw unknown field %q", fn))
 			}
