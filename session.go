@@ -286,6 +286,7 @@ var newSession = func(
 	s.ctx, s.ctxCancel = context.WithCancel(context.WithValue(context.Background(), SessionTracingKey, tracingID))
 	// Check if the FlowTeleSignal field is populated
 	if s.config.FlowTeleSignal == nil {
+		fmt.Printf("SESSION: Creating AckHandler\n")
 		s.sentPacketHandler, s.receivedPacketHandler = ackhandler.NewAckHandler(
 			0,
 			getMaxPacketSize(s.conn.RemoteAddr()),
