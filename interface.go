@@ -2,6 +2,7 @@ package quic
 
 import (
 	"context"
+	"github.com/lucas-clemente/quic-go/flowtele"
 	"io"
 	"net"
 	"time"
@@ -192,6 +193,13 @@ type Session interface {
 	ConnectionState() ConnectionState
 }
 
+type FlowTeleSession interface {
+	Session
+
+	ApplyControl(beta float64, cwnd_adjust int64, cwnd_max_adjust int64, use_conservative_allocation bool) bool
+	SetFixedRate(rateInBytePerSecond uint64)
+}
+
 // An EarlySession is a session that is handshaking.
 // Data sent during the handshake is encrypted using the forward secure keys.
 // When using client certificates, the client's identity is only verified
@@ -265,8 +273,9 @@ type Config struct {
 	// QUIC Event Tracer (see https://github.com/google/quic-trace).
 	// Warning: Support for quic-trace will soon be dropped in favor of qlog.
 	// It is disabled by default. Use the "quictrace" build tag to enable (e.g. go build -tags quictrace).
-	QuicTracer quictrace.Tracer
-	Tracer     logging.Tracer
+	QuicTracer     quictrace.Tracer
+	Tracer         logging.Tracer
+	FlowTeleSignal *flowtele.FlowTeleSignal
 }
 
 // A Listener for incoming QUIC connections

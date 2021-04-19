@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"github.com/lucas-clemente/quic-go/flowtele"
 	"time"
 
 	"github.com/lucas-clemente/quic-go/internal/protocol"
@@ -25,6 +26,8 @@ type RTTStats struct {
 	meanDeviation time.Duration
 
 	maxAckDelay time.Duration
+
+	FlowTeleSignal *flowtele.FlowTeleSignal
 }
 
 // NewRTTStats makes a properly initialized RTTStats object
@@ -92,6 +95,10 @@ func (r *RTTStats) UpdateRTT(sendDelta, ackDelay time.Duration, now time.Time) {
 	} else {
 		r.meanDeviation = time.Duration(oneMinusBeta*float32(r.meanDeviation/time.Microsecond)+rttBeta*float32(AbsDuration(r.smoothedRTT-sample)/time.Microsecond)) * time.Microsecond
 		r.smoothedRTT = time.Duration((float32(r.smoothedRTT/time.Microsecond)*oneMinusAlpha)+(float32(sample/time.Microsecond)*rttAlpha)) * time.Microsecond
+	}
+	if r.FlowTeleSignal != nil {
+		// send updated srtt to flowtele socket
+		r.FlowTeleSignal.NewSrttMeasurement(now, r.smoothedRTT)
 	}
 }
 

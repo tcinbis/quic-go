@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"github.com/lucas-clemente/quic-go/internal/congestion"
 	"io"
 	"net"
 	"reflect"
@@ -273,15 +274,29 @@ var newSession = func(
 		s.version,
 	)
 	s.preSetup()
-	s.sentPacketHandler, s.receivedPacketHandler = ackhandler.NewAckHandler(
-		0,
-		s.rttStats,
-		s.perspective,
-		s.traceCallback,
-		s.tracer,
-		s.logger,
-		s.version,
-	)
+	// Check if the FlowTeleSignal field is populated
+	if s.config.FlowTeleSignal == nil {
+		s.sentPacketHandler, s.receivedPacketHandler = ackhandler.NewAckHandler(
+			0,
+			s.rttStats,
+			s.perspective,
+			s.traceCallback,
+			s.tracer,
+			s.logger,
+			s.version,
+		)
+	} else {
+		s.sentPacketHandler, s.receivedPacketHandler = ackhandler.NewFlowTeleAckHandler(
+			0,
+			s.rttStats,
+			s.perspective,
+			s.traceCallback,
+			s.tracer,
+			s.logger,
+			s.version,
+			s.config.FlowTeleSignal,
+		)
+	}
 	initialStream := newCryptoStream()
 	handshakeStream := newCryptoStream()
 	params := &wire.TransportParameters{
@@ -397,15 +412,29 @@ var newClientSession = func(
 		s.version,
 	)
 	s.preSetup()
-	s.sentPacketHandler, s.receivedPacketHandler = ackhandler.NewAckHandler(
-		initialPacketNumber,
-		s.rttStats,
-		s.perspective,
-		s.traceCallback,
-		s.tracer,
-		s.logger,
-		s.version,
-	)
+	// Check if the FlowTeleSignal field is populated
+	if s.config.FlowTeleSignal == nil {
+		s.sentPacketHandler, s.receivedPacketHandler = ackhandler.NewAckHandler(
+			0,
+			s.rttStats,
+			s.perspective,
+			s.traceCallback,
+			s.tracer,
+			s.logger,
+			s.version,
+		)
+	} else {
+		s.sentPacketHandler, s.receivedPacketHandler = ackhandler.NewFlowTeleAckHandler(
+			0,
+			s.rttStats,
+			s.perspective,
+			s.traceCallback,
+			s.tracer,
+			s.logger,
+			s.version,
+			s.config.FlowTeleSignal,
+		)
+	}
 	initialStream := newCryptoStream()
 	handshakeStream := newCryptoStream()
 	params := &wire.TransportParameters{
@@ -476,11 +505,27 @@ var newClientSession = func(
 	return s
 }
 
+func (s *session) ApplyControl(beta float64, cwnd_adjust int64, cwnd_max_adjust int64, use_conservative_allocation bool) bool {
+	fsph, ok := s.sentPacketHandler.(ackhandler.FlowTeleSentPacketHandler)
+	if !ok {
+		panic("sentPacketHandler of session is not FlowTeleSentPacketHandler")
+	}
+	return fsph.ApplyControl(beta, cwnd_adjust, cwnd_max_adjust, use_conservative_allocation)
+}
+
+func (s *session) SetFixedRate(rateInBitsPerSecond uint64) {
+	fsph, ok := s.sentPacketHandler.(ackhandler.FlowTeleSentPacketHandler)
+	if !ok {
+		panic("sentPacketHandler of session is not FlowTeleSentPacketHandler")
+	}
+	fsph.SetFixedRate(congestion.Bandwidth(rateInBitsPerSecond))
+}
+
 func (s *session) preSetup() {
 	s.sendQueue = newSendQueue(s.conn)
 	s.retransmissionQueue = newRetransmissionQueue(s.version)
 	s.frameParser = wire.NewFrameParser(s.version)
-	s.rttStats = &utils.RTTStats{}
+	s.rttStats = &utils.RTTStats{FlowTeleSignal: s.config.FlowTeleSignal}
 	s.connFlowController = flowcontrol.NewConnectionFlowController(
 		protocol.InitialMaxData,
 		protocol.ByteCount(s.config.MaxReceiveConnectionFlowControlWindow),

@@ -1,6 +1,7 @@
 package ackhandler
 
 import (
+	"github.com/lucas-clemente/quic-go/internal/congestion"
 	"time"
 
 	"github.com/lucas-clemente/quic-go/internal/protocol"
@@ -66,4 +67,9 @@ type ReceivedPacketHandler interface {
 
 	GetAlarmTimeout() time.Time
 	GetAckFrame(encLevel protocol.EncryptionLevel, onlyIfQueued bool) *wire.AckFrame
+}
+
+type FlowTeleSentPacketHandler interface {
+	SentPacketHandler
+	congestion.FlowTeleCongestionControlModifier
 }

@@ -2,7 +2,6 @@ package quic
 
 import (
 	"errors"
-
 	"github.com/lucas-clemente/quic-go/internal/protocol"
 )
 
@@ -100,5 +99,6 @@ func populateConfig(config *Config) *Config {
 		TokenStore:                            config.TokenStore,
 		QuicTracer:                            config.QuicTracer,
 		Tracer:                                config.Tracer,
+		FlowTeleSignal:                        config.FlowTeleSignal, // can be nil if we are not using FlowTele!
 	}
 }
