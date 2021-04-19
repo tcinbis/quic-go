@@ -105,6 +105,7 @@ func (c *flowTeleCubicSender) InRecovery() bool {
 }
 
 func (c *flowTeleCubicSender) GetCongestionWindow() protocol.ByteCount {
+	fmt.Printf("FLOWTELE CC fixed rate enabled: %t\n", c.useFixedBandwidth)
 	if c.useFixedBandwidth {
 		cwnd := BandwidthFromDelta(protocol.ByteCount(c.fixedBandwidth), c.cubicSend.rttStats.LatestRTT())
 		fmt.Printf("Setting CWND Window to %d\n", cwnd)
