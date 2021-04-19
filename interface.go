@@ -203,7 +203,7 @@ type Session interface {
 type FlowTeleSession interface {
 	Session
 
-	ApplyControl(beta float64, cwnd_adjust int64, cwnd_max_adjust int64, use_conservative_allocation bool) bool
+	ApplyControl(beta float64, cwnd_adjust int64, cwnd_max_adjust int64, use_conservative_allocation bool) bool //nolint:stylecheck
 	SetFixedRate(rateInBytePerSecond uint64)
 }
 

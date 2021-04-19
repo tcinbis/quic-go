@@ -521,7 +521,7 @@ var newClientSession = func(
 	return s
 }
 
-func (s *session) ApplyControl(beta float64, cwnd_adjust int64, cwnd_max_adjust int64, use_conservative_allocation bool) bool {
+func (s *session) ApplyControl(beta float64, cwnd_adjust int64, cwnd_max_adjust int64, use_conservative_allocation bool) bool { //nolint:stylecheck
 	fsph, ok := s.sentPacketHandler.(ackhandler.FlowTeleSentPacketHandler)
 	if !ok {
 		panic("sentPacketHandler of session is not FlowTeleSentPacketHandler")

@@ -1,8 +1,9 @@
 package utils
 
 import (
-	"github.com/lucas-clemente/quic-go/flowtele"
 	"time"
+
+	"github.com/lucas-clemente/quic-go/flowtele"
 
 	"github.com/lucas-clemente/quic-go/internal/protocol"
 )
