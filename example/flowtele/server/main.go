@@ -27,19 +27,40 @@ var (
 	localPortFlag  = flag.Int("local-port", 5500, "Port number to listen on.")
 )
 
+const (
+	Bit  = 1
+	KBit = 1000 * Bit
+	MBit = 1000 * KBit
+	GBit = 1000 * MBit
+
+	Byte  = 8 * Bit
+	KByte = 1000 * Byte
+	MByte = 1000 * KByte
+)
+
 func main() {
 	startSession()
 }
 
-func startSession() {
-	newSrttMeasurement := func(t time.Time, srtt time.Duration) {}
-	packetsLost := func(t time.Time, newSlowStartThreshold uint64) {}
-	packetsAcked := func(t time.Time, congestionWindow uint64, packetsInFlight uint64, ackedBytes uint64) {}
+func setupFlowTeleSignaling() *flowtele.FlowTeleSignal {
+	newSrttMeasurement := func(t time.Time, srtt time.Duration) {
+		//fmt.Printf("SRTT: %s\n", t.Format("2006-01-02 15:04:05"), srtt.String())
+	}
+	packetsLost := func(t time.Time, newSlowStartThreshold uint64) {
+		//fmt.Printf("Packet LOST at %d.\n", t.Format("2006-01-02 15:04:05"))
+	}
+	packetsAcked := func(t time.Time, congestionWindow uint64, packetsInFlight uint64, ackedBytes uint64) {
+		//fmt.Printf("ACKED \t cwnd: %d \t inFlight: %d \t ackedBytes: %d\n", congestionWindow, packetsInFlight, ackedBytes)
+	}
 
-	flowteleSignalInterface := flowtele.CreateFlowteleSignalInterface(newSrttMeasurement, packetsLost, packetsAcked)
+	return flowtele.CreateFlowteleSignalInterface(newSrttMeasurement, packetsLost, packetsAcked)
+}
+
+func startSession() {
+
 	quicConf := quic.Config{
 		KeepAlive:      true,
-		FlowTeleSignal: flowteleSignalInterface,
+		FlowTeleSignal: setupFlowTeleSignaling(),
 	}
 
 	lAddr := &net.UDPAddr{IP: net.ParseIP(*localIpFlag), Port: *localPortFlag}
@@ -79,6 +100,9 @@ func startSession() {
 	for i := range message {
 		message[i] = 42
 	}
+	rate := uint64((1 * GBit * 0.8))
+	fmt.Printf("Setting rate to %d\n", rate)
+	fsession.SetFixedRate(rate)
 	for {
 		_, err = stream.Write(message)
 		if err != nil {

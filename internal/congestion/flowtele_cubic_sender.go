@@ -50,10 +50,10 @@ func (c *flowTeleCubicSender) ApplyControl(beta float64, cwnd_adjust int64, cwnd
 	return true
 }
 
-func (c *flowTeleCubicSender) SetFixedRate(rateInBitsPerSecond Bandwidth) {
-	fmt.Printf("FLOWTELE CC: SetFixedRate(%d)\n", rateInBitsPerSecond)
+func (c *flowTeleCubicSender) SetFixedRate(rateInBitPerSecond Bandwidth) {
+	fmt.Printf("FLOWTELE CC: SetFixedRate(%d)\n", rateInBitPerSecond)
 	c.useFixedBandwidth = true
-	c.fixedBandwidth = rateInBitsPerSecond
+	c.fixedBandwidth = rateInBitPerSecond
 }
 
 func (c *flowTeleCubicSender) TimeUntilSend(bytesInFlight protocol.ByteCount) time.Time {
