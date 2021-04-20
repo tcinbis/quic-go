@@ -531,12 +531,12 @@ func (s *session) ApplyControl(beta float64, cwnd_adjust int64, cwnd_max_adjust 
 	return fsph.ApplyControl(beta, cwnd_adjust, cwnd_max_adjust, use_conservative_allocation)
 }
 
-func (s *session) SetFixedRate(rateInBitsPerSecond uint64) {
+func (s *session) SetFixedRate(rateInBitPerSecond uint64) {
 	fsph, ok := s.sentPacketHandler.(ackhandler.FlowTeleSentPacketHandler)
 	if !ok {
 		panic("sentPacketHandler of session is not FlowTeleSentPacketHandler")
 	}
-	fsph.SetFixedRate(congestion.Bandwidth(rateInBitsPerSecond))
+	fsph.SetFixedRate(congestion.Bandwidth(rateInBitPerSecond))
 }
 
 func (s *session) preSetup() {

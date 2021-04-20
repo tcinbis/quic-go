@@ -105,10 +105,10 @@ func listenOnStream(session quic.Session, stream quic.Stream) error {
 		nTot += n
 		tCur := tEnd.Sub(tStart).Seconds()
 		tTot := tEnd.Sub(tInit).Seconds()
-		// MBit/s
+		// Mbit/s
 		curRate := float64(n) / tCur / 1000000.0 * 8.0
 		totRate := float64(nTot) / tTot / 1000000.0 * 8.0
-		fmt.Printf("%d_%d cur: %.1fMBit/s (%.1fMB in %.2fs), tot: %.1fMBit/s (%.1fMB in %.2fs)\n", lPort, rPort, curRate, float64(n)/1000000, tCur, totRate, float64(nTot)/1000000, tTot)
+		fmt.Printf("%d_%d cur: %.1fMbit/s (%.1fMB in %.2fs), tot: %.1fMbit/s (%.1fMB in %.2fs)\n", lPort, rPort, curRate, float64(n)/1000000, tCur, totRate, float64(nTot)/1000000, tTot)
 	}
 }
 
