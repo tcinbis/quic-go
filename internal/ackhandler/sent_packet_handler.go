@@ -164,8 +164,8 @@ func (s *flowTeleSentPacketHandler) ApplyControl(beta float64, cwnd_adjust int64
 	return s.congestion.(congestion.FlowteleSendAlgorithmWithDebugInfos).ApplyControl(beta, cwnd_adjust, cwnd_max_adjust, use_conservative_allocation)
 }
 
-func (s *flowTeleSentPacketHandler) SetFixedRate(rateInBitsPerSecond congestion.Bandwidth) {
-	s.congestion.(congestion.FlowteleSendAlgorithmWithDebugInfos).SetFixedRate(rateInBitsPerSecond)
+func (s *flowTeleSentPacketHandler) SetFixedRate(rateInBitPerSecond congestion.Bandwidth) {
+	s.congestion.(congestion.FlowteleSendAlgorithmWithDebugInfos).SetFixedRate(rateInBitPerSecond)
 }
 
 func (h *sentPacketHandler) DropPackets(encLevel protocol.EncryptionLevel) {
