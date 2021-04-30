@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net"
+	quic "quic-go"
 	"time"
 
 	"github.com/lucas-clemente/quic-go"
@@ -23,6 +24,7 @@ var (
 )
 
 func main() {
+	flag.Parse()
 	rAddr := &net.UDPAddr{IP: net.ParseIP(*remoteIpFlag), Port: *remotePortFlag}
 	lAddr := &net.UDPAddr{IP: net.ParseIP(*localIpFlag), Port: *localPortFlag}
 	startSession(rAddr, lAddr)
