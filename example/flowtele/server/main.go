@@ -13,6 +13,7 @@ import (
 	"log"
 	"math/big"
 	"net"
+	quic "quic-go"
 	"time"
 
 	"github.com/lucas-clemente/quic-go/flowtele"
@@ -100,7 +101,7 @@ func startSession() {
 	for i := range message {
 		message[i] = 42
 	}
-	rate := uint64((5 * MBit * 0.8))
+	rate := uint64((10 * MBit * 0.8))
 	fmt.Printf("Setting rate to %d\n", rate)
 	fsession.SetFixedRate(rate)
 	for {
