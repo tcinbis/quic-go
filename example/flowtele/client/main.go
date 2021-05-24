@@ -8,7 +8,8 @@ import (
 	"io"
 	"log"
 	"net"
-	quic "quic-go"
+
+	//quic "quic-go"
 	"time"
 
 	"github.com/lucas-clemente/quic-go"
