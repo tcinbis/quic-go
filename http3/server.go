@@ -83,10 +83,14 @@ type Server struct {
 
 	mutex     sync.Mutex
 	listeners map[*quic.EarlyListener]struct{}
+	smutex    sync.Mutex
+	sessions  map[*quic.EarlySession]int
 	closed    utils.AtomicBool
 
 	loggerOnce sync.Once
 	logger     utils.Logger
+
+	newStreamCallback func(s *quic.EarlySession, strID quic.StreamID)
 }
 
 // ListenAndServe listens on the UDP address s.Addr and calls s.Handler to handle HTTP/3 requests on incoming connections.
@@ -195,6 +199,45 @@ func (s *Server) removeListener(l *quic.EarlyListener) {
 	s.mutex.Unlock()
 }
 
+func (s *Server) SetNewStreamCallback(f func(sess *quic.EarlySession, strID quic.StreamID)) {
+	s.newStreamCallback = f
+}
+
+// Adds sessions which have one or more streams currently open
+func (s *Server) addSession(sess *quic.EarlySession) {
+	if sess != nil {
+		s.smutex.Lock()
+		if s.sessions == nil {
+			s.sessions = make(map[*quic.EarlySession]int)
+		}
+		s.sessions[sess]++
+		s.smutex.Unlock()
+	}
+}
+
+// Remove a session after a stream was closed
+func (s *Server) removeSession(sess *quic.EarlySession) {
+	if sess != nil {
+		fmt.Printf("Deleting session %v from %v\n", sess, s.sessions)
+		s.smutex.Lock()
+		if s.sessions[sess] <= 1 {
+			// Only one stream is open so we can remove the session entirely now.
+			delete(s.sessions, sess)
+		} else {
+			s.sessions[sess]--
+		}
+		s.smutex.Unlock()
+		fmt.Println(s.sessions)
+	}
+}
+
+func (s *Server) GetSessions() *map[*quic.EarlySession]int {
+	s.smutex.Lock()
+	rsessions := s.sessions
+	s.smutex.Unlock()
+	return &(rsessions)
+}
+
 func (s *Server) handleConn(sess quic.EarlySession) {
 	// TODO: accept control streams
 	decoder := qpack.NewDecoder(nil)
@@ -217,6 +260,11 @@ func (s *Server) handleConn(sess quic.EarlySession) {
 			s.logger.Debugf("Accepting stream failed: %s", err)
 			return
 		}
+		// track session now that it is open and using a stream
+		s.addSession(&sess)
+		if s.newStreamCallback != nil {
+			go s.newStreamCallback(&sess, str.StreamID())
+		}
 		go func() {
 			rerr := s.handleRequest(sess, str, decoder, func() {
 				sess.CloseWithError(quic.ErrorCode(errorFrameUnexpected), "")
@@ -236,6 +284,7 @@ func (s *Server) handleConn(sess quic.EarlySession) {
 				return
 			}
 			str.Close()
+			s.removeSession(&sess)
 		}()
 	}
 }
@@ -331,6 +380,12 @@ func (s *Server) Close() error {
 	var err error
 	for ln := range s.listeners {
 		if cerr := (*ln).Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}
+
+	for sess := range s.sessions {
+		if cerr := (*sess).CloseWithError(quic.ErrorCode(errorNoError), "Server Closing."); cerr != nil && err == nil {
 			err = cerr
 		}
 	}
