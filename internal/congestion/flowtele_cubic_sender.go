@@ -27,7 +27,8 @@ var (
 
 func NewFlowTeleCubicSender(clock Clock, rttStats *utils.RTTStats, reno bool, tracer logging.ConnectionTracer, flowTeleSignal *flowtele.FlowTeleSignal) *flowTeleCubicSender {
 	c := &flowTeleCubicSender{
-		cubicSender: cubicSender{rttStats: rttStats,
+		cubicSender: cubicSender{
+			rttStats:                   rttStats,
 			largestSentPacketNumber:    protocol.InvalidPacketNumber,
 			largestAckedPacketNumber:   protocol.InvalidPacketNumber,
 			largestSentAtLastCutback:   protocol.InvalidPacketNumber,
@@ -54,7 +55,7 @@ func NewFlowTeleCubicSender(clock Clock, rttStats *utils.RTTStats, reno bool, tr
 
 func (c *flowTeleCubicSender) slowStartThresholdUpdated() {
 	// todo(cyrill) do we need the actual packet received time or is time.Now() sufficient?
-	c.flowTeleSignalInterface.PacketsLost(time.Now(), uint64(c.cubicSender.slowStartThreshold))
+	go c.flowTeleSignalInterface.PacketsLost(time.Now(), uint64(c.cubicSender.slowStartThreshold))
 }
 
 func (c *flowTeleCubicSender) ApplyControl(beta float64, cwnd_adjust int64, cwnd_max_adjust int64, use_conservative_allocation bool) bool { //nolint:stylecheck
@@ -129,7 +130,7 @@ func (c *flowTeleCubicSender) OnPacketAcked(ackedPacketNumber protocol.PacketNum
 	if c.InSlowStart() {
 		c.hybridSlowStart.OnPacketAcked(ackedPacketNumber)
 	}
-	c.flowTeleSignalInterface.PacketsAcked(time.Now(), uint64(c.GetCongestionWindow()), uint64(priorInFlight), uint64(ackedBytes))
+	go c.flowTeleSignalInterface.PacketsAcked(time.Now(), uint64(c.GetCongestionWindow()), uint64(priorInFlight), uint64(ackedBytes))
 }
 
 func (c *flowTeleCubicSender) OnPacketLost(packetNumber protocol.PacketNumber, lostBytes protocol.ByteCount, priorInFlight protocol.ByteCount) {

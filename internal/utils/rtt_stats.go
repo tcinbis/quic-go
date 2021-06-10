@@ -99,7 +99,7 @@ func (r *RTTStats) UpdateRTT(sendDelta, ackDelay time.Duration, now time.Time) {
 	}
 	if r.FlowTeleSignal != nil {
 		// send updated srtt to flowtele socket
-		r.FlowTeleSignal.NewSrttMeasurement(now, r.smoothedRTT)
+		go r.FlowTeleSignal.NewSrttMeasurement(now, r.smoothedRTT)
 	}
 }
 
