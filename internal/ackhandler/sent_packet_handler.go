@@ -141,7 +141,7 @@ func newFlowTeleSentPacketHandler(
 	congestion := congestion.NewFlowTeleCubicSender(
 		congestion.DefaultClock{},
 		rttStats,
-		true, // use Reno
+		false, // do NOT use Reno
 		tracer,
 		signal,
 	)
