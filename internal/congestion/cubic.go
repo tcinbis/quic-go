@@ -1,6 +1,7 @@
 package congestion
 
 import (
+	"fmt"
 	"math"
 	"time"
 
@@ -91,6 +92,7 @@ func (c *Cubic) alpha() float32 {
 	// TCPFriendly alpha is described in Section 3.3 of the CUBIC paper. Note that
 	// beta here is a cwnd multiplier, and is equal to 1-beta from the paper.
 	// We derive the equivalent alpha for an N-connection emulation as:
+	fmt.Println("QUIC_CC ALPHA CALLED")
 	b := c.beta()
 	return 3 * float32(c.numConnections) * float32(c.numConnections) * (1 - b) / (1 + b)
 }
@@ -100,7 +102,7 @@ func (c *Cubic) beta() float32 {
 	// emulation, which emulates the effective backoff of an ensemble of N
 	// TCP-Reno connections on a single loss event. The effective multiplier is
 	// computed as:
-	println("QUIC BETA CALLED")
+	fmt.Println("QUIC_CC BETA CALLED")
 	return (float32(c.numConnections) - 1 + beta) / float32(c.numConnections)
 }
 
@@ -109,6 +111,7 @@ func (c *Cubic) betaLastMax() float32 {
 	// N-connection emulation, which emulates the additional backoff of
 	// an ensemble of N TCP-Reno connections on a single loss event. The
 	// effective multiplier is computed as:
+	fmt.Println("QUIC_CC BETALASTMAX CALLED")
 	return (float32(c.numConnections) - 1 + betaLastMax) / float32(c.numConnections)
 }
 
@@ -130,6 +133,7 @@ func (c *Cubic) OnApplicationLimited() {
 // a loss event. Returns the new congestion window in packets. The new
 // congestion window is a multiplicative decrease of our current window.
 func (c *Cubic) CongestionWindowAfterPacketLoss(currentCongestionWindow protocol.ByteCount) protocol.ByteCount {
+	fmt.Println("QUIC_CC CWNDLost CALLED")
 	if currentCongestionWindow+maxDatagramSize < c.lastMaxCongestionWindow {
 		// We never reached the old max, so assume we are competing with another
 		// flow. Use our extra back off factor to allow the other flow to go up.
@@ -151,6 +155,7 @@ func (c *Cubic) CongestionWindowAfterAck(
 	delayMin time.Duration,
 	eventTime time.Time,
 ) protocol.ByteCount {
+	fmt.Println("QUIC_CC CWNDAck CALLED")
 	c.ackedBytesCount += ackedBytes
 
 	if c.epoch.IsZero() {
