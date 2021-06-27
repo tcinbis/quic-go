@@ -1,6 +1,7 @@
 package congestion
 
 import (
+	"fmt"
 	"math"
 	"time"
 
@@ -100,6 +101,7 @@ func (c *Cubic) beta() float32 {
 	// emulation, which emulates the effective backoff of an ensemble of N
 	// TCP-Reno connections on a single loss event. The effective multiplier is
 	// computed as:
+	fmt.Println("QUIC BETA CALLED")
 	return (float32(c.numConnections) - 1 + beta) / float32(c.numConnections)
 }
 
