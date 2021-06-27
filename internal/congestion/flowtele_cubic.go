@@ -1,7 +1,6 @@
 package congestion
 
 import (
-	"fmt"
 	"math"
 	"time"
 
@@ -64,7 +63,7 @@ func (c *FlowTeleCubic) alpha() float32 { //nolint:unused
 }
 
 func (c *FlowTeleCubic) beta() float32 { //nolint:unused
-	fmt.Println("FLOWTELE BETA CALLED")
+	println("FLOWTELE BETA CALLED")
 	return (float32(c.numConnections) - 1 + c.betaRaw) / float32(c.numConnections)
 }
 
