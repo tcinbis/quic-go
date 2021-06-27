@@ -1,6 +1,7 @@
 package congestion
 
 import (
+	"fmt"
 	"math"
 	"time"
 
@@ -54,20 +55,22 @@ func (c *FlowTeleCubic) Reset() {
 	c.lastTargetCongestionWindow = 0
 }
 
-func (c *FlowTeleCubic) alpha() float32 { //nolint:unused
+func (c *FlowTeleCubic) alpha() float32 {
 	// TODO: 	Flowtele's original impl. uses a hardcoded beta here but then calls c.beta() in
 	// 				CongestionWindowAfterPacketLoss. Which one is correct?
 	// flowtele uses the hardcoded default beta value for the TCP fairness calculations
+	fmt.Println("FLOWTELE_CC Alpha CALLED")
 	b := float32(0.7)
 	return 3 * float32(c.numConnections) * float32(c.numConnections) * (1 - b) / (1 + b)
 }
 
-func (c *FlowTeleCubic) beta() float32 { //nolint:unused
-	println("FLOWTELE BETA CALLED")
+func (c *FlowTeleCubic) beta() float32 {
+	fmt.Println("FLOWTELE_CC beta CALLED")
 	return (float32(c.numConnections) - 1 + c.betaRaw) / float32(c.numConnections)
 }
 
-func (c *FlowTeleCubic) betaLastMax() float32 { //nolint:unused
+func (c *FlowTeleCubic) betaLastMax() float32 {
+	fmt.Println("FLOWTELE_CC BetaLastMax CALLED")
 	return (float32(c.numConnections) - 1 + c.betaLastMaxRaw) / float32(c.numConnections)
 }
 
@@ -89,6 +92,7 @@ func (c *FlowTeleCubic) OnApplicationLimited() {
 // a loss event. Returns the new congestion window in packets. The new
 // congestion window is a multiplicative decrease of our current window.
 func (c *FlowTeleCubic) CongestionWindowAfterPacketLoss(currentCongestionWindow protocol.ByteCount) protocol.ByteCount {
+	fmt.Println("FLOWTELE_CC CWNDLost CALLED")
 	c.adjustBeta()
 
 	if currentCongestionWindow+maxDatagramSize < c.lastMaxCongestionWindow {
@@ -110,6 +114,7 @@ func (c *FlowTeleCubic) CongestionWindowAfterPacketLoss(currentCongestionWindow 
 // follows a cubic function that depends on the time passed since last
 // packet loss.
 func (c *FlowTeleCubic) CongestionWindowAfterAck(ackedBytes protocol.ByteCount, currentCongestionWindow protocol.ByteCount, delayMin time.Duration, eventTime time.Time) protocol.ByteCount {
+	fmt.Println("FLOWTELE_CC CWNDAck CALLED")
 	c.ackedBytesCount += ackedBytes
 
 	if c.epoch.IsZero() {
