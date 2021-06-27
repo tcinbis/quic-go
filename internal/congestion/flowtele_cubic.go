@@ -58,8 +58,7 @@ func (c *FlowTeleCubic) alpha() float32 {
 	// TODO: 	Flowtele's original impl. uses a hardcoded beta here but then calls c.beta() in
 	// 				CongestionWindowAfterPacketLoss. Which one is correct?
 	// flowtele uses the hardcoded default beta value for the TCP fairness calculations
-	//b := float32(0.7)
-	b := c.beta()
+	b := float32(0.7)
 	return 3 * float32(c.numConnections) * float32(c.numConnections) * (1 - b) / (1 + b)
 }
 
