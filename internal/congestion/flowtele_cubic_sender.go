@@ -52,6 +52,29 @@ func NewFlowTeleCubicSender(clock Clock, rttStats *utils.RTTStats, reno bool, tr
 	}
 	return c
 }
+func (c *flowteleCubicSender) adjustCongestionWindow() {
+	if c.useFixedBandwidth {
+		srtt := c.rttStats.SmoothedRTT()
+		// If we haven't measured an rtt, we cannot estimate the cwnd
+		if srtt != 0 {
+			c.congestionWindow = utils.MinByteCount(c.maxCongestionWindow, protocol.ByteCount(math.Ceil(float64(DeltaBytesFromBandwidth(c.fixedBandwidth, srtt)))))
+			fmt.Printf("FLOWTELE CC: set congestion window to %d (%d), fixed bw = %d, srtt = %v\n", c.GetCongestionWindow(), c.congestionWindow, c.fixedBandwidth, srtt)
+		}
+	} else if c.cubic.cwndAddDelta != 0 {
+			fmt.Printf("FLOWTELE CC: add cwndAddDelta %d to congestion window %d\n", c.cubic.cwndAddDelta, c.congestionWindow)
+		c.congestionWindow = utils.MaxByteCount(
+			c.minCongestionWindow,
+			utils.MinByteCount(
+				c.maxCongestionWindow,
+				protocol.ByteCount(int64(c.congestionWindow)+c.cubic.cwndAddDelta)))
+		c.cubic.cwndAddDelta = 0
+	}
+
+	if c.cubic.isThirdPhaseValue {
+		c.cubic.CongestionWindowAfterPacketLoss(c.congestionWindow)
+		c.cubic.isThirdPhaseValue = false
+	}
+}
 
 func (c *flowTeleCubicSender) slowStartThresholdUpdated() {
 	// todo(cyrill) do we need the actual packet received time or is time.Now() sufficient?
@@ -172,6 +195,7 @@ func (c *flowTeleCubicSender) maybeIncreaseCwnd(
 	if !c.isCwndLimited(priorInFlight) {
 		c.cubic.OnApplicationLimited()
 		c.maybeTraceStateChange(logging.CongestionStateApplicationLimited)
+		c.adjustCongestionWindow()
 		return
 	}
 	if c.congestionWindow >= c.maxCongestionWindow {
@@ -194,6 +218,7 @@ func (c *flowTeleCubicSender) maybeIncreaseCwnd(
 		}
 	} else {
 		c.congestionWindow = utils.MinByteCount(c.maxCongestionWindow, c.cubic.CongestionWindowAfterAck(ackedBytes, c.congestionWindow, c.rttStats.MinRTT(), eventTime))
+		c.adjustCongestionWindow()
 	}
 }
 
