@@ -179,7 +179,8 @@ func (c *flowTeleCubicSender) OnPacketLost(packetNumber protocol.PacketNumber, l
 	// OnPacketLost is called for every packet!
 	c.numPacketsLost++
 	lostRatio := float64(c.numPacketsLost) / (float64(c.largestAckedPacketNumber) - float64(c.numPacketsLost))
-	fmt.Printf("Packets lost: %d Ratio: %f %%\n", c.numPacketsLost, lostRatio*100)
+	go c.flowTeleSignalInterface.PacketLostRatio(time.Now(), lostRatio)
+	fmt.Printf("Total packets: %d Packets lost: %d Ratio: %f %%\n", int(c.largestAckedPacketNumber), c.numPacketsLost, lostRatio*100)
 	// reset packet count from congestion avoidance mode. We start
 	// counting again when we're out of recovery.
 	c.numAckedPackets = 0
