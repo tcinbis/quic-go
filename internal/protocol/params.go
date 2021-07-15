@@ -6,7 +6,7 @@ import "time"
 const DesiredReceiveBufferSize = (1 << 20) * 2 // 2 MB
 
 // MaxPacketSizeIPv4 is the maximum packet size that we use for sending IPv4 packets.
-const MaxPacketSizeIPv4 = 1000
+const MaxPacketSizeIPv4 = 1252
 
 // MaxPacketSizeIPv6 is the maximum packet size that we use for sending IPv6 packets.
 const MaxPacketSizeIPv6 = 1232
