@@ -2,7 +2,6 @@ package congestion
 
 import (
 	"fmt"
-	"math"
 	"time"
 
 	"github.com/lucas-clemente/quic-go/flowtele"
@@ -56,14 +55,7 @@ func NewFlowTeleCubicSender(clock Clock, rttStats *utils.RTTStats, reno bool, tr
 func (c *flowTeleCubicSender) adjustCongestionWindow() {
 	flowteleCubic := c.checkFlowTeleCubicAlgorithm()
 
-	if c.useFixedBandwidth {
-		srtt := c.rttStats.SmoothedRTT()
-		// If we haven't measured an rtt, we cannot estimate the cwnd
-		if srtt != 0 {
-			c.congestionWindow = utils.MinByteCount(c.maxCongestionWindow, protocol.ByteCount(math.Ceil(float64(DeltaBytesFromBandwidth(c.fixedBandwidth, srtt)))))
-			fmt.Printf("FLOWTELE CC: set congestion window to %d (%d), fixed bw = %d, srtt = %v\n", c.GetCongestionWindow(), c.congestionWindow, c.fixedBandwidth, srtt)
-		}
-	} else if flowteleCubic.cwndAddDelta != 0 {
+	if flowteleCubic.cwndAddDelta != 0 {
 		fmt.Printf("FLOWTELE CC: add cwndAddDelta %d to congestion window %d\n", flowteleCubic.cwndAddDelta, c.congestionWindow)
 		c.congestionWindow = utils.MaxByteCount(
 			c.minCongestionWindow,
