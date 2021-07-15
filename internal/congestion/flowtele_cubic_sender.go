@@ -175,12 +175,11 @@ func (c *flowTeleCubicSender) OnPacketLost(packetNumber protocol.PacketNumber, l
 	}
 	c.slowStartThreshold = c.congestionWindow
 	c.largestSentAtLastCutback = c.largestSentPacketNumber
+
+	c.numPacketsLost += int(priorInFlight / maxDatagramSize)
+	fmt.Printf("Packets lost: %d Ratio: %d %%\n", c.numPacketsLost, int(c.numAckedPackets/c.largestAckedPacketNumber)*100)
 	// reset packet count from congestion avoidance mode. We start
 	// counting again when we're out of recovery.
-	fmt.Printf("Loss happened! Acked: %d, Packet number lost: %d, Prior in flight: %d --> packets in flight: %d\n", c.numAckedPackets, packetNumber, priorInFlight, priorInFlight/maxDatagramSize)
-	//c.numPacketsLost += int(c.numAckedPackets) - int(packetNumber)
-	c.numPacketsLost += int(priorInFlight / maxDatagramSize)
-	fmt.Printf("Packets lost: %d\n", c.numPacketsLost)
 	c.numAckedPackets = 0
 	// Call to flowtele signal method is handled in slowStartThresholdUpdated
 	c.slowStartThresholdUpdated()
