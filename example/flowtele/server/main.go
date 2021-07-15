@@ -51,11 +51,12 @@ func setupFlowTeleSignaling() *flowtele.FlowTeleSignal {
 	packetsLost := func(t time.Time, newSlowStartThreshold uint64) {
 		//fmt.Printf("Packet LOST at %d.\n", t.Format("2006-01-02 15:04:05"))
 	}
+	packetsLostRatio := func(t time.Time, lostRatio float64) {}
 	packetsAcked := func(t time.Time, congestionWindow uint64, packetsInFlight uint64, ackedBytes uint64) {
 		//fmt.Printf("ACKED \t cwnd: %d \t inFlight: %d \t ackedBytes: %d\n", congestionWindow, packetsInFlight, ackedBytes)
 	}
 
-	return flowtele.CreateFlowteleSignalInterface(newSrttMeasurement, packetsLost, packetsAcked)
+	return flowtele.CreateFlowteleSignalInterface(newSrttMeasurement, packetsLost, packetsLostRatio, packetsAcked)
 }
 
 func startSession() {
