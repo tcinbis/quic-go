@@ -17,6 +17,7 @@ type flowTeleCubicSender struct {
 	flowTeleSignalInterface *flowtele.FlowTeleSignal
 	useFixedBandwidth       bool
 	fixedBandwidth          Bandwidth
+	numPacketsLost          int
 }
 
 // Test whether we can assign flowTeleCubicSender to the FlowTeleSendAlgorithm interface
@@ -176,6 +177,9 @@ func (c *flowTeleCubicSender) OnPacketLost(packetNumber protocol.PacketNumber, l
 	c.largestSentAtLastCutback = c.largestSentPacketNumber
 	// reset packet count from congestion avoidance mode. We start
 	// counting again when we're out of recovery.
+	fmt.Printf("Loss happene d! Acked: %d, Number lost: %d\n", c.numAckedPackets, packetNumber)
+	c.numPacketsLost += int(c.numAckedPackets) - int(packetNumber)
+	fmt.Printf("Packets lost: %d\n", c.numPacketsLost)
 	c.numAckedPackets = 0
 	// Call to flowtele signal method is handled in slowStartThresholdUpdated
 	c.slowStartThresholdUpdated()
