@@ -301,3 +301,17 @@ func (mr *MockQuicSessionMockRecorder) shutdown() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "shutdown", reflect.TypeOf((*MockQuicSession)(nil).shutdown))
 }
+
+// ConnectionId mocks base method
+func (m *MockQuicSession) ConnectionID() protocol.ConnectionID {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ConnectionId")
+	ret0, _ := ret[0].(protocol.ConnectionID)
+	return ret0
+}
+
+// ConnectionId indicates an expected call of ConnectionId
+func (mr *MockQuicSessionMockRecorder) ConnectionID() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConnectionId", reflect.TypeOf((*MockQuicSession)(nil).ConnectionID))
+}

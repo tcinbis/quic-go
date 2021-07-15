@@ -524,7 +524,7 @@ func (s *session) SetFixedRate(rateInBitPerSecond uint64) {
 	fsph.SetFixedRate(congestion.Bandwidth(rateInBitPerSecond))
 }
 
-func (s *session) ConnectionId() protocol.ConnectionID {
+func (s *session) ConnectionID() protocol.ConnectionID {
 	return s.origDestConnID
 }
 

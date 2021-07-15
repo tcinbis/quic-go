@@ -193,7 +193,7 @@ type Session interface {
 	// Warning: This API should not be considered stable and might change soon.
 	ConnectionState() ConnectionState
 
-	ConnectionId() protocol.ConnectionID
+	ConnectionID() protocol.ConnectionID
 }
 
 type FlowTeleSession interface {
