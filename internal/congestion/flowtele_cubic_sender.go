@@ -52,7 +52,7 @@ func NewFlowTeleCubicSender(clock Clock, rttStats *utils.RTTStats, reno bool, tr
 	}
 	return c
 }
-func (c *flowteleCubicSender) adjustCongestionWindow() {
+func (c *flowTeleCubicSender) adjustCongestionWindow() {
 	if c.useFixedBandwidth {
 		srtt := c.rttStats.SmoothedRTT()
 		// If we haven't measured an rtt, we cannot estimate the cwnd
