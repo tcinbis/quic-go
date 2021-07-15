@@ -222,6 +222,7 @@ func (c *flowTeleCubicSender) maybeIncreaseCwnd(
 	} else {
 		c.congestionWindow = utils.MinByteCount(c.maxCongestionWindow, c.cubic.CongestionWindowAfterAck(ackedBytes, c.congestionWindow, c.rttStats.MinRTT(), eventTime))
 		c.adjustCongestionWindow()
+		c.numAckedPackets++
 	}
 }
 
