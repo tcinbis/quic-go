@@ -214,7 +214,7 @@ type Session interface {
 	// See https://datatracker.ietf.org/doc/draft-pauly-quic-datagram/.
 	ReceiveMessage() ([]byte, error)
 
-	ConnectionId() protocol.ConnectionID
+	ConnectionID() protocol.ConnectionID
 }
 
 type FlowTeleSession interface {
