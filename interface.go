@@ -192,6 +192,8 @@ type Session interface {
 	// It blocks until the handshake completes.
 	// Warning: This API should not be considered stable and might change soon.
 	ConnectionState() ConnectionState
+
+	ConnectionId() protocol.ConnectionID
 }
 
 type FlowTeleSession interface {

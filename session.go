@@ -524,6 +524,10 @@ func (s *session) SetFixedRate(rateInBitPerSecond uint64) {
 	fsph.SetFixedRate(congestion.Bandwidth(rateInBitPerSecond))
 }
 
+func (s *session) ConnectionId() protocol.ConnectionID {
+	return s.origDestConnID
+}
+
 func (s *session) preSetup() {
 	s.sendQueue = newSendQueue(s.conn)
 	s.retransmissionQueue = newRetransmissionQueue(s.version)
