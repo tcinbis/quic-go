@@ -82,7 +82,7 @@ func (c *flowTeleCubicSender) slowStartThresholdUpdated() {
 }
 
 func (c *flowTeleCubicSender) ApplyControl(beta float64, cwnd_adjust int64, cwnd_max_adjust int64, use_conservative_allocation bool) bool { //nolint:stylecheck
-	fmt.Printf("FLOWTELE CC: ApplyControl(%f, %d, %d, %t)\n", beta, cwnd_adjust, cwnd_max_adjust, use_conservative_allocation)
+	fmt.Printf("FLOWTELE CC: ApplyControl(%f, %d, %d, %t) mod\n", beta, cwnd_adjust, cwnd_max_adjust, use_conservative_allocation)
 	flowTeleCubic := c.checkFlowTeleCubicAlgorithm()
 
 	flowTeleCubic.lastMaxCongestionWindowAddDelta = cwnd_max_adjust
