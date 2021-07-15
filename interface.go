@@ -198,6 +198,8 @@ type Session interface {
 	// ReceiveMessage gets a message received in a datagram.
 	// See https://datatracker.ietf.org/doc/draft-pauly-quic-datagram/.
 	ReceiveMessage() ([]byte, error)
+
+	ConnectionId() protocol.ConnectionID
 }
 
 type FlowTeleSession interface {
