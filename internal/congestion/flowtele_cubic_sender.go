@@ -177,7 +177,7 @@ func (c *flowTeleCubicSender) OnPacketLost(packetNumber protocol.PacketNumber, l
 	c.largestSentAtLastCutback = c.largestSentPacketNumber
 
 	c.numPacketsLost += int(priorInFlight / maxDatagramSize)
-	fmt.Printf("Packets lost: %d Ratio: %d %%\n", c.numPacketsLost, int(c.numAckedPackets)/int(c.largestAckedPacketNumber)*100)
+	fmt.Printf("Packets lost: %d Ratio: %f %%\n", c.numPacketsLost, float64(c.numAckedPackets)/float64(c.largestAckedPacketNumber)*100)
 	// reset packet count from congestion avoidance mode. We start
 	// counting again when we're out of recovery.
 	c.numAckedPackets = 0
