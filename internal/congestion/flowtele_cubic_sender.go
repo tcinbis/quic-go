@@ -2,6 +2,7 @@ package congestion
 
 import (
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/lucas-clemente/quic-go/flowtele"
@@ -53,6 +54,8 @@ func NewFlowTeleCubicSender(clock Clock, rttStats *utils.RTTStats, reno bool, tr
 	return c
 }
 func (c *flowTeleCubicSender) adjustCongestionWindow() {
+	flowteleCubic := c.checkFlowTeleCubicAlgorithm()
+
 	if c.useFixedBandwidth {
 		srtt := c.rttStats.SmoothedRTT()
 		// If we haven't measured an rtt, we cannot estimate the cwnd
@@ -60,19 +63,19 @@ func (c *flowTeleCubicSender) adjustCongestionWindow() {
 			c.congestionWindow = utils.MinByteCount(c.maxCongestionWindow, protocol.ByteCount(math.Ceil(float64(DeltaBytesFromBandwidth(c.fixedBandwidth, srtt)))))
 			fmt.Printf("FLOWTELE CC: set congestion window to %d (%d), fixed bw = %d, srtt = %v\n", c.GetCongestionWindow(), c.congestionWindow, c.fixedBandwidth, srtt)
 		}
-	} else if c.cubic.cwndAddDelta != 0 {
-			fmt.Printf("FLOWTELE CC: add cwndAddDelta %d to congestion window %d\n", c.cubic.cwndAddDelta, c.congestionWindow)
+	} else if flowteleCubic.cwndAddDelta != 0 {
+		fmt.Printf("FLOWTELE CC: add cwndAddDelta %d to congestion window %d\n", flowteleCubic.cwndAddDelta, c.congestionWindow)
 		c.congestionWindow = utils.MaxByteCount(
 			c.minCongestionWindow,
 			utils.MinByteCount(
 				c.maxCongestionWindow,
-				protocol.ByteCount(int64(c.congestionWindow)+c.cubic.cwndAddDelta)))
-		c.cubic.cwndAddDelta = 0
+				protocol.ByteCount(int64(c.congestionWindow)+flowteleCubic.cwndAddDelta)))
+		flowteleCubic.cwndAddDelta = 0
 	}
 
-	if c.cubic.isThirdPhaseValue {
+	if flowteleCubic.isThirdPhaseValue {
 		c.cubic.CongestionWindowAfterPacketLoss(c.congestionWindow)
-		c.cubic.isThirdPhaseValue = false
+		flowteleCubic.isThirdPhaseValue = false
 	}
 }
 
