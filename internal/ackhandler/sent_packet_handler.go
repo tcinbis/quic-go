@@ -139,6 +139,7 @@ func newSentPacketHandler(
 
 func newFlowTeleSentPacketHandler(
 	initialPacketNumber protocol.PacketNumber,
+	initialMaxDatagramSize protocol.ByteCount,
 	rttStats *utils.RTTStats,
 	pers protocol.Perspective,
 	tracer logging.ConnectionTracer,
@@ -154,7 +155,7 @@ func newFlowTeleSentPacketHandler(
 	)
 
 	// Create a sentPacketHandler and then update the congestion control algorithm to flowTeleCubicSender
-	sph := newSentPacketHandler(initialPacketNumber, rttStats, pers, tracer, logger)
+	sph := newSentPacketHandler(initialPacketNumber, initialMaxDatagramSize, rttStats, pers, tracer, logger)
 	sph.congestion = congestion
 	return &flowTeleSentPacketHandler{sentPacketHandler: *sph}
 }

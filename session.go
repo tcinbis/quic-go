@@ -312,7 +312,7 @@ var newSession = func(
 			s.tracer,
 			s.logger,
 			s.version,
-			s.config.FlowTeleSignal
+			s.config.FlowTeleSignal,
 		)
 	}
 	initialStream := newCryptoStream()
@@ -444,7 +444,7 @@ var newClientSession = func(
 			s.logger,
 			s.version,
 		)
-	} else{
+	} else {
 		s.sentPacketHandler, s.receivedPacketHandler = ackhandler.NewFlowTeleAckHandler(
 			initialPacketNumber,
 			getMaxPacketSize(s.conn.RemoteAddr()),

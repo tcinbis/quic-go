@@ -28,21 +28,7 @@ var (
 
 func NewFlowTeleCubicSender(clock Clock, rttStats *utils.RTTStats, reno bool, tracer logging.ConnectionTracer, flowTeleSignal *flowtele.FlowTeleSignal) *flowTeleCubicSender {
 	c := &flowTeleCubicSender{
-		cubicSender: cubicSender{
-			rttStats:                   rttStats,
-			largestSentPacketNumber:    protocol.InvalidPacketNumber,
-			largestAckedPacketNumber:   protocol.InvalidPacketNumber,
-			largestSentAtLastCutback:   protocol.InvalidPacketNumber,
-			initialCongestionWindow:    initialCongestionWindow,
-			initialMaxCongestionWindow: initialMaxCongestionWindow,
-			congestionWindow:           initialCongestionWindow,
-			slowStartThreshold:         protocol.MaxByteCount,
-			cubic:                      NewCubic(clock),
-			clock:                      clock,
-			reno:                       reno,
-			tracer:                     tracer,
-			maxDatagramSize:            initialMaxDatagramSize,
-		},
+		cubicSender:             *newCubicSender(clock, rttStats, reno, initialMaxDatagramSize, initialCongestionWindow*initialMaxDatagramSize, protocol.MaxCongestionWindowPackets*initialMaxDatagramSize, tracer),
 		flowTeleSignalInterface: flowTeleSignal,
 	}
 	c.pacer = newPacer(c.BandwidthEstimate)
