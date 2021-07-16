@@ -34,15 +34,14 @@ func NewFlowTeleCubicSender(clock Clock, rttStats *utils.RTTStats, reno bool, tr
 			largestAckedPacketNumber:   protocol.InvalidPacketNumber,
 			largestSentAtLastCutback:   protocol.InvalidPacketNumber,
 			initialCongestionWindow:    initialCongestionWindow,
-			initialMaxCongestionWindow: maxCongestionWindow,
+			initialMaxCongestionWindow: initialMaxCongestionWindow,
 			congestionWindow:           initialCongestionWindow,
-			minCongestionWindow:        minCongestionWindow,
-			slowStartThreshold:         maxCongestionWindow,
-			maxCongestionWindow:        maxCongestionWindow,
-			cubic:                      NewFlowTeleCubic(clock),
+			slowStartThreshold:         protocol.MaxByteCount,
+			cubic:                      NewCubic(clock),
 			clock:                      clock,
 			reno:                       reno,
 			tracer:                     tracer,
+			maxDatagramSize:            initialMaxDatagramSize,
 		},
 		flowTeleSignalInterface: flowTeleSignal,
 	}
@@ -59,9 +58,9 @@ func (c *flowTeleCubicSender) adjustCongestionWindow() {
 	if flowteleCubic.cwndAddDelta != 0 {
 		fmt.Printf("FLOWTELE CC: add cwndAddDelta %d to congestion window %d\n", flowteleCubic.cwndAddDelta, c.congestionWindow)
 		c.congestionWindow = utils.MaxByteCount(
-			c.minCongestionWindow,
+			c.minCongestionWindow(),
 			utils.MinByteCount(
-				c.maxCongestionWindow,
+				c.maxCongestionWindow(),
 				protocol.ByteCount(int64(c.congestionWindow)+flowteleCubic.cwndAddDelta)))
 		flowteleCubic.cwndAddDelta = 0
 	}
@@ -170,8 +169,8 @@ func (c *flowTeleCubicSender) OnPacketLost(packetNumber protocol.PacketNumber, l
 	} else {
 		c.congestionWindow = c.cubic.CongestionWindowAfterPacketLoss(c.congestionWindow)
 	}
-	if c.congestionWindow < c.minCongestionWindow {
-		c.congestionWindow = c.minCongestionWindow
+	if minCwnd := c.minCongestionWindow(); c.congestionWindow < minCwnd {
+		c.congestionWindow = minCwnd
 	}
 	c.slowStartThreshold = c.congestionWindow
 	c.largestSentAtLastCutback = c.largestSentPacketNumber
@@ -203,7 +202,7 @@ func (c *flowTeleCubicSender) maybeIncreaseCwnd(
 		c.adjustCongestionWindow()
 		return
 	}
-	if c.congestionWindow >= c.maxCongestionWindow {
+	if c.congestionWindow >= c.maxCongestionWindow() {
 		return
 	}
 	if c.InSlowStart() {
@@ -222,7 +221,7 @@ func (c *flowTeleCubicSender) maybeIncreaseCwnd(
 			c.numAckedPackets = 0
 		}
 	} else {
-		c.congestionWindow = utils.MinByteCount(c.maxCongestionWindow, c.cubic.CongestionWindowAfterAck(ackedBytes, c.congestionWindow, c.rttStats.MinRTT(), eventTime))
+		c.congestionWindow = utils.MinByteCount(c.maxCongestionWindow(), c.cubic.CongestionWindowAfterAck(ackedBytes, c.congestionWindow, c.rttStats.MinRTT(), eventTime))
 		c.adjustCongestionWindow()
 	}
 }
@@ -234,7 +233,7 @@ func (c *flowTeleCubicSender) isCwndLimited(bytesInFlight protocol.ByteCount) bo
 	}
 	availableBytes := congestionWindow - bytesInFlight
 	slowStartLimited := c.InSlowStart() && bytesInFlight > congestionWindow/2
-	return slowStartLimited || availableBytes <= maxBurstBytes
+	return slowStartLimited || availableBytes <= maxBurstPackets*c.maxDatagramSize
 }
 
 // BandwidthEstimate returns the current bandwidth estimate
@@ -261,7 +260,7 @@ func (c *flowTeleCubicSender) OnRetransmissionTimeout(packetsRetransmitted bool)
 	c.hybridSlowStart.Restart()
 	c.cubic.Reset()
 	c.slowStartThreshold = c.congestionWindow / 2
-	c.congestionWindow = c.minCongestionWindow
+	c.congestionWindow = c.minCongestionWindow()
 	c.slowStartThresholdUpdated()
 }
 
@@ -273,9 +272,9 @@ func (c *flowTeleCubicSender) OnConnectionMigration() {
 	c.lastCutbackExitedSlowstart = false
 	c.cubic.Reset()
 	c.numAckedPackets = 0
+	c.numAckedPackets = 0
 	c.congestionWindow = c.initialCongestionWindow
 	c.slowStartThreshold = c.initialMaxCongestionWindow
-	c.maxCongestionWindow = c.initialMaxCongestionWindow
 	c.slowStartThresholdUpdated()
 }
 
