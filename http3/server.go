@@ -473,7 +473,7 @@ func (s *Server) Close() error {
 	}
 
 	for sess := range s.sessions {
-		if cerr := (*sess).CloseWithError(quic.ErrorCode(errorNoError), "Server Closing."); cerr != nil && err == nil {
+		if cerr := (*sess).CloseWithError(quic.ApplicationErrorCode(errorNoError), "Server Closing."); cerr != nil && err == nil {
 			err = cerr
 		}
 	}

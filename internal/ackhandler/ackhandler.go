@@ -24,14 +24,14 @@ func NewAckHandler(
 // NewFlowTeleAckHandler creates a new FlowTeleSentPacketHandler and a new ReceivedPacketHandler
 func NewFlowTeleAckHandler(
 	initialPacketNumber protocol.PacketNumber,
+	initialMaxDatagramSize protocol.ByteCount,
 	rttStats *utils.RTTStats,
 	pers protocol.Perspective,
-	traceCallback func(quictrace.Event),
 	tracer logging.ConnectionTracer,
 	logger utils.Logger,
 	version protocol.VersionNumber,
 	signal *flowtele.FlowTeleSignal,
 ) (FlowTeleSentPacketHandler, ReceivedPacketHandler) {
-	sph := newFlowTeleSentPacketHandler(initialPacketNumber, rttStats, pers, traceCallback, tracer, logger, signal)
+	sph := newFlowTeleSentPacketHandler(initialPacketNumber, initialMaxDatagramSize, rttStats, pers, tracer, logger, signal)
 	return sph, newReceivedPacketHandler(sph, rttStats, logger, version)
 }
