@@ -97,7 +97,7 @@ type Server struct {
 	mutex     sync.Mutex
 	listeners map[*quic.EarlyListener]struct{}
 	smutex    sync.Mutex
-	sessions  map[*quic.EarlySession]int
+	sessions  map[string]int
 	closed    utils.AtomicBool
 
 	loggerOnce sync.Once
@@ -207,6 +207,9 @@ func (s *Server) serveImpl(tlsConf *tls.Config, conn net.PacketConn) error {
 		if err != nil {
 			return err
 		}
+		// track session
+		s.addSession(&sess)
+		fmt.Printf("Connection ID: %v\n", sess.ConnectionID())
 		go s.handleConn(sess)
 	}
 }
@@ -238,9 +241,10 @@ func (s *Server) addSession(sess *quic.EarlySession) {
 	if sess != nil {
 		s.smutex.Lock()
 		if s.sessions == nil {
-			s.sessions = make(map[*quic.EarlySession]int)
+			s.sessions = make(map[string]int)
+		} else {
+			s.sessions[(*sess).ConnectionID().String()]++
 		}
-		s.sessions[sess]++
 		s.smutex.Unlock()
 	}
 }
@@ -248,20 +252,18 @@ func (s *Server) addSession(sess *quic.EarlySession) {
 // Remove a session after a stream was closed
 func (s *Server) removeSession(sess *quic.EarlySession) {
 	if sess != nil {
-		fmt.Printf("Deleting session %v from %v\n", sess, s.sessions)
 		s.smutex.Lock()
-		if s.sessions[sess] <= 1 {
+		if s.sessions[(*sess).ConnectionID().String()] <= 1 {
 			// Only one stream is open so we can remove the session entirely now.
-			delete(s.sessions, sess)
+			delete(s.sessions, (*sess).ConnectionID().String())
 		} else {
-			s.sessions[sess]--
+			s.sessions[(*sess).ConnectionID().String()]--
 		}
 		s.smutex.Unlock()
-		fmt.Println(s.sessions)
 	}
 }
 
-func (s *Server) GetSessions() *map[*quic.EarlySession]int {
+func (s *Server) GetSessions() *map[string]int {
 	s.smutex.Lock()
 	rsessions := s.sessions
 	s.smutex.Unlock()
@@ -290,16 +292,21 @@ func (s *Server) handleConn(sess quic.EarlySession) {
 		str, err := sess.AcceptStream(context.Background())
 		if err != nil {
 			s.logger.Debugf("Accepting stream failed: %s", err)
+			go s.removeSession(&sess)
 			return
 		}
-		// track session now that it is open and using a stream
 		s.addSession(&sess)
-		if s.newStreamCallback != nil {
-			go s.newStreamCallback(&sess, str.StreamID())
-		}
 		go func() {
+			// Calling stream callback for newly opened stream
+			if s.newStreamCallback != nil {
+				s.logger.Debugf("Calling Stream Callback.\n")
+				go s.newStreamCallback(&sess, str.StreamID())
+			} else {
+				s.logger.Debugf("Stream Callback is nil.\n")
+			}
 			rerr := s.handleRequest(sess, str, decoder, func() {
 				sess.CloseWithError(quic.ApplicationErrorCode(errorFrameUnexpected), "")
+				s.removeSession(&sess)
 			})
 			if rerr.err != nil || rerr.streamErr != 0 || rerr.connErr != 0 {
 				s.logger.Debugf("Handling request failed: %s", err)
@@ -312,6 +319,7 @@ func (s *Server) handleConn(sess quic.EarlySession) {
 						reason = rerr.err.Error()
 					}
 					sess.CloseWithError(quic.ApplicationErrorCode(rerr.connErr), reason)
+					s.removeSession(&sess)
 				}
 				return
 			}
@@ -326,6 +334,7 @@ func (s *Server) handleUnidirectionalStreams(sess quic.EarlySession) {
 		str, err := sess.AcceptUniStream(context.Background())
 		if err != nil {
 			s.logger.Debugf("accepting unidirectional stream failed: %s", err)
+			go s.removeSession(&sess)
 			return
 		}
 
@@ -472,11 +481,11 @@ func (s *Server) Close() error {
 		}
 	}
 
-	for sess := range s.sessions {
-		if cerr := (*sess).CloseWithError(quic.ApplicationErrorCode(errorNoError), "Server Closing."); cerr != nil && err == nil {
-			err = cerr
-		}
-	}
+	//for sess := range s.sessions {
+	//	if cerr := (*sess).CloseWithError(quic.ApplicationErrorCode(errorNoError), "Server Closing."); cerr != nil && err == nil {
+	//		err = cerr
+	//	}
+	//}
 	return err
 }
 
@@ -613,4 +622,18 @@ func ListenAndServe(addr, certFile, keyFile string, handler http.Handler) error 
 		// Cannot close the HTTP server or wait for requests to complete properly :/
 		return err
 	}
+}
+
+func (s *Server) SetLogLevelDebug() {
+	s.loggerOnce.Do(func() {
+		s.logger = utils.DefaultLogger.WithPrefix("server")
+	})
+	s.logger.SetLogLevel(utils.LogLevelDebug)
+}
+
+func (s *Server) SetLogLevelInfo() {
+	s.loggerOnce.Do(func() {
+		s.logger = utils.DefaultLogger.WithPrefix("server")
+	})
+	s.logger.SetLogLevel(utils.LogLevelInfo)
 }
