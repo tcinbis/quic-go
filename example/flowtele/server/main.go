@@ -14,6 +14,8 @@ import (
 	"math/big"
 	"net"
 
+	"github.com/lucas-clemente/quic-go/interop/utils"
+
 	//quic "quic-go"
 	"time"
 
@@ -90,7 +92,7 @@ func startSession() {
 		log.Printf("Accept error: %v\n", err)
 	}
 	fmt.Printf("Session established.\n")
-	fsession := checkFlowTeleSession(session)
+	fsession := utils.CheckFlowTeleSession(session)
 	fmt.Printf("Waiting for streams...\n")
 	stream, err := fsession.AcceptStream(context.Background())
 	if err != nil {
@@ -113,14 +115,6 @@ func startSession() {
 			return
 		}
 	}
-}
-
-func checkFlowTeleSession(s quic.Session) quic.FlowTeleSession {
-	fs, ok := s.(quic.FlowTeleSession)
-	if !ok {
-		panic("Returned session is not flowtele sessions")
-	}
-	return fs
 }
 
 // checks for common quic errors, returns true if okay (no error)

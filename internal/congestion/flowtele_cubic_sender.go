@@ -26,10 +26,11 @@ var (
 	_ FlowteleSendAlgorithmWithDebugInfos = &flowTeleCubicSender{}
 )
 
-func NewFlowTeleCubicSender(clock Clock,
+func NewFlowTeleCubicSender(
+	clock Clock,
 	rttStats *utils.RTTStats,
-	reno bool,
 	initialMaxCongestionWindow protocol.ByteCount,
+	reno bool,
 	tracer logging.ConnectionTracer,
 	flowTeleSignal *flowtele.FlowTeleSignal,
 ) *flowTeleCubicSender {
@@ -39,7 +40,7 @@ func NewFlowTeleCubicSender(clock Clock,
 			largestSentPacketNumber:    protocol.InvalidPacketNumber,
 			largestAckedPacketNumber:   protocol.InvalidPacketNumber,
 			largestSentAtLastCutback:   protocol.InvalidPacketNumber,
-			initialCongestionWindow:    initialCongestionWindow,
+			initialCongestionWindow:    initialCongestionWindow * initialMaxDatagramSize,
 			initialMaxCongestionWindow: initialMaxCongestionWindow,
 			congestionWindow:           initialCongestionWindow,
 			slowStartThreshold:         protocol.MaxByteCount,
@@ -47,6 +48,7 @@ func NewFlowTeleCubicSender(clock Clock,
 			clock:                      clock,
 			reno:                       reno,
 			tracer:                     tracer,
+			maxDatagramSize:            initialMaxDatagramSize,
 		},
 		flowTeleSignalInterface: flowTeleSignal,
 	}

@@ -13,8 +13,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/lucas-clemente/quic-go/internal/congestion"
 	"github.com/lucas-clemente/quic-go/internal/ackhandler"
+	"github.com/lucas-clemente/quic-go/internal/congestion"
 	"github.com/lucas-clemente/quic-go/internal/flowcontrol"
 	"github.com/lucas-clemente/quic-go/internal/handshake"
 	"github.com/lucas-clemente/quic-go/internal/logutils"
@@ -437,7 +437,7 @@ var newClientSession = func(
 			s.logger,
 			s.version,
 		)
-	} else{
+	} else {
 		s.sentPacketHandler, s.receivedPacketHandler = ackhandler.NewFlowTeleAckHandler(
 			initialPacketNumber,
 			getMaxPacketSize(s.conn.RemoteAddr()),
@@ -540,7 +540,7 @@ func (s *session) SetFixedRate(rateInBitPerSecond uint64) {
 }
 
 func (s *session) ConnectionID() protocol.ConnectionID {
-	return s.origDestConnID
+	return s.handshakeDestConnID
 }
 
 func (s *session) preSetup() {
