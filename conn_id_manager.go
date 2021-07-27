@@ -10,7 +10,7 @@ import (
 )
 
 type ConnectionIDObserver interface {
-	NotifyChanged(oldID, newID protocol.ConnectionID)
+	NotifyChanged(oldID, newID StatsClientID)
 }
 
 type connIDManager struct {

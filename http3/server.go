@@ -215,7 +215,7 @@ func (s *Server) serveImpl(tlsConf *tls.Config, conn net.PacketConn) error {
 			return err
 		}
 		// track session
-		s.Stats.AddClient(sess.ConnectionID(), sess)
+		s.Stats.AddClient(quic.StatsClientID(sess.ConnectionID()), sess)
 		fmt.Printf("Connection ID: %v\n", sess.ConnectionID())
 		go s.handleConn(sess)
 	}
@@ -271,7 +271,7 @@ func (s *Server) handleConn(sess quic.EarlySession) {
 			s.logger.Debugf("Accepting stream failed: %s", err)
 			return
 		}
-		s.Stats.AddFlow(sess.ConnectionID())
+		s.Stats.AddFlow(quic.StatsClientID(sess.ConnectionID()))
 		go func() {
 			// Calling stream callback for newly opened stream
 			if s.newStreamCallback != nil {
@@ -282,7 +282,7 @@ func (s *Server) handleConn(sess quic.EarlySession) {
 			}
 			rerr := s.handleRequest(sess, str, decoder, func() {
 				sess.CloseWithError(quic.ApplicationErrorCode(errorFrameUnexpected), "")
-				s.Stats.RetireClient(sess.ConnectionID())
+				s.Stats.RetireClient(quic.StatsClientID(sess.ConnectionID()))
 			})
 			if rerr.err != nil || rerr.streamErr != 0 || rerr.connErr != 0 {
 				s.logger.Debugf("Handling request failed: %s", err)
@@ -295,12 +295,12 @@ func (s *Server) handleConn(sess quic.EarlySession) {
 						reason = rerr.err.Error()
 					}
 					sess.CloseWithError(quic.ApplicationErrorCode(rerr.connErr), reason)
-					s.Stats.RetireClient(sess.ConnectionID())
+					s.Stats.RetireClient(quic.StatsClientID(sess.ConnectionID()))
 				}
 				return
 			}
 			str.Close()
-			s.Stats.RemoveFlow(sess.ConnectionID())
+			s.Stats.RemoveFlow(quic.StatsClientID(sess.ConnectionID()))
 		}()
 	}
 }

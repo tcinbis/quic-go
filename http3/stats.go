@@ -25,27 +25,27 @@ type StatusEntry struct {
 type HTTPStats interface {
 	quic.ServerStats
 
-	LastRequest(c protocol.ConnectionID, r string)
-	LastCwnd(cId protocol.ConnectionID, c int)
+	LastRequest(c quic.StatsClientID, r string)
+	LastCwnd(cID quic.StatsClientID, c int)
 
 	All() []StatusEntry
 }
 
 type dummyHTTPStats struct{}
 
-func (d dummyHTTPStats) AddClient(cId protocol.ConnectionID, sess quic.Session) {}
+func (d dummyHTTPStats) AddClient(_ quic.StatsClientID, _ quic.Session) {}
 
-func (d dummyHTTPStats) RetireClient(cId protocol.ConnectionID) {}
+func (d dummyHTTPStats) RetireClient(_ quic.StatsClientID) {}
 
-func (d dummyHTTPStats) AddFlow(cId protocol.ConnectionID) {}
+func (d dummyHTTPStats) AddFlow(_ quic.StatsClientID) {}
 
-func (d dummyHTTPStats) RemoveFlow(cId protocol.ConnectionID) {}
+func (d dummyHTTPStats) RemoveFlow(_ quic.StatsClientID) {}
 
-func (d dummyHTTPStats) NotifyChanged(oldID, newID protocol.ConnectionID) {}
+func (d dummyHTTPStats) NotifyChanged(_, _ quic.StatsClientID) {}
 
-func (d dummyHTTPStats) LastRequest(c protocol.ConnectionID, r string) {}
+func (d dummyHTTPStats) LastRequest(_ quic.StatsClientID, _ string) {}
 
-func (d dummyHTTPStats) LastCwnd(cId protocol.ConnectionID, c int) {}
+func (d dummyHTTPStats) LastCwnd(_ quic.StatsClientID, _ int) {}
 
 func (d dummyHTTPStats) All() []StatusEntry { return nil }
 

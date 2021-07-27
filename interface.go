@@ -333,13 +333,15 @@ type EarlyListener interface {
 	Accept(context.Context) (EarlySession, error)
 }
 
+type StatsClientID protocol.ConnectionID
+
 type ServerStats interface {
-	AddClient(cId protocol.ConnectionID, sess Session)
-	RetireClient(cId protocol.ConnectionID)
+	AddClient(cID StatsClientID, sess Session)
+	RetireClient(cID StatsClientID)
 
 	// TODO: Maybe extend it with flow IDs?
-	AddFlow(cId protocol.ConnectionID)
-	RemoveFlow(cId protocol.ConnectionID)
+	AddFlow(cID StatsClientID)
+	RemoveFlow(cID StatsClientID)
 
-	NotifyChanged(oldID, newID protocol.ConnectionID)
+	NotifyChanged(oldID, newID StatsClientID)
 }

@@ -266,10 +266,15 @@ var newSession = func(
 		s.logID = destConnID.String()
 	}
 
-	var notifyChanged func(protocol.ConnectionID, protocol.ConnectionID) = nil
+	var observerTarget func(oldID, newID StatsClientID) = nil
+	notifyChanged := func(_, _ protocol.ConnectionID) {}
 	if conf.Stats != nil {
-		notifyChanged = (*conf.Stats).NotifyChanged
+		observerTarget = (*conf.Stats).NotifyChanged
+		notifyChanged = func(oldID, newID protocol.ConnectionID) {
+			observerTarget(StatsClientID(oldID), StatsClientID(newID))
+		}
 	}
+
 	s.connIDManager = newConnIDManager(
 		destConnID,
 		func(token protocol.StatelessResetToken) { runner.AddResetToken(token, s) },
