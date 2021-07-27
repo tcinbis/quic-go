@@ -96,14 +96,16 @@ type Server struct {
 
 	mutex     sync.Mutex
 	listeners map[*quic.EarlyListener]struct{}
-	smutex    sync.Mutex
-	sessions  map[string]int
-	closed    utils.AtomicBool
+
+	closed utils.AtomicBool
 
 	loggerOnce sync.Once
 	logger     utils.Logger
 
 	newStreamCallback func(s *quic.EarlySession, strID quic.StreamID)
+
+	// Enable the tracking of HTTP statistics across all connections.
+	Stats HTTPStats
 }
 
 // ListenAndServe listens on the UDP address s.Addr and calls s.Handler to handle HTTP/3 requests on incoming connections.
@@ -147,6 +149,11 @@ func (s *Server) serveImpl(tlsConf *tls.Config, conn net.PacketConn) error {
 	s.loggerOnce.Do(func() {
 		s.logger = utils.DefaultLogger.WithPrefix("server")
 	})
+
+	if s.Stats == nil {
+		s.logger.Errorf("http3 stats = nil! Replacing with dummy.")
+		s.Stats = newDummyHTTPStats()
+	}
 
 	// The tls.Config we pass to Listen needs to have the GetConfigForClient callback set.
 	// That way, we can get the QUIC version and set the correct ALPN value.
@@ -208,7 +215,7 @@ func (s *Server) serveImpl(tlsConf *tls.Config, conn net.PacketConn) error {
 			return err
 		}
 		// track session
-		s.addSession(&sess)
+		s.Stats.AddClient(sess.ConnectionID(), sess)
 		fmt.Printf("Connection ID: %v\n", sess.ConnectionID())
 		go s.handleConn(sess)
 	}
@@ -236,38 +243,8 @@ func (s *Server) SetNewStreamCallback(f func(sess *quic.EarlySession, strID quic
 	s.newStreamCallback = f
 }
 
-// Adds sessions which have one or more streams currently open
-func (s *Server) addSession(sess *quic.EarlySession) {
-	if sess != nil {
-		s.smutex.Lock()
-		if s.sessions == nil {
-			s.sessions = make(map[string]int)
-		} else {
-			s.sessions[(*sess).ConnectionID().String()]++
-		}
-		s.smutex.Unlock()
-	}
-}
-
-// Remove a session after a stream was closed
-func (s *Server) removeSession(sess *quic.EarlySession) {
-	if sess != nil {
-		s.smutex.Lock()
-		if s.sessions[(*sess).ConnectionID().String()] <= 1 {
-			// Only one stream is open so we can remove the session entirely now.
-			delete(s.sessions, (*sess).ConnectionID().String())
-		} else {
-			s.sessions[(*sess).ConnectionID().String()]--
-		}
-		s.smutex.Unlock()
-	}
-}
-
-func (s *Server) GetSessions() *map[string]int {
-	s.smutex.Lock()
-	rsessions := s.sessions
-	s.smutex.Unlock()
-	return &(rsessions)
+func (s *Server) GetSessions() []StatusEntry {
+	return s.Stats.All()
 }
 
 func (s *Server) handleConn(sess quic.EarlySession) {
@@ -292,10 +269,9 @@ func (s *Server) handleConn(sess quic.EarlySession) {
 		str, err := sess.AcceptStream(context.Background())
 		if err != nil {
 			s.logger.Debugf("Accepting stream failed: %s", err)
-			go s.removeSession(&sess)
 			return
 		}
-		s.addSession(&sess)
+		s.Stats.AddFlow(sess.ConnectionID())
 		go func() {
 			// Calling stream callback for newly opened stream
 			if s.newStreamCallback != nil {
@@ -306,7 +282,7 @@ func (s *Server) handleConn(sess quic.EarlySession) {
 			}
 			rerr := s.handleRequest(sess, str, decoder, func() {
 				sess.CloseWithError(quic.ApplicationErrorCode(errorFrameUnexpected), "")
-				s.removeSession(&sess)
+				s.Stats.RetireClient(sess.ConnectionID())
 			})
 			if rerr.err != nil || rerr.streamErr != 0 || rerr.connErr != 0 {
 				s.logger.Debugf("Handling request failed: %s", err)
@@ -319,12 +295,12 @@ func (s *Server) handleConn(sess quic.EarlySession) {
 						reason = rerr.err.Error()
 					}
 					sess.CloseWithError(quic.ApplicationErrorCode(rerr.connErr), reason)
-					s.removeSession(&sess)
+					s.Stats.RetireClient(sess.ConnectionID())
 				}
 				return
 			}
 			str.Close()
-			s.removeSession(&sess)
+			s.Stats.RemoveFlow(sess.ConnectionID())
 		}()
 	}
 }
@@ -334,7 +310,6 @@ func (s *Server) handleUnidirectionalStreams(sess quic.EarlySession) {
 		str, err := sess.AcceptUniStream(context.Background())
 		if err != nil {
 			s.logger.Debugf("accepting unidirectional stream failed: %s", err)
-			go s.removeSession(&sess)
 			return
 		}
 

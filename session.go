@@ -265,11 +265,17 @@ var newSession = func(
 	} else {
 		s.logID = destConnID.String()
 	}
+
+	var notifyChanged func(protocol.ConnectionID, protocol.ConnectionID) = nil
+	if conf.Stats != nil {
+		notifyChanged = (*conf.Stats).NotifyChanged
+	}
 	s.connIDManager = newConnIDManager(
 		destConnID,
 		func(token protocol.StatelessResetToken) { runner.AddResetToken(token, s) },
 		runner.RemoveResetToken,
 		s.queueControlFrame,
+		notifyChanged,
 	)
 	s.connIDGenerator = newConnIDGenerator(
 		srcConnID,
@@ -286,7 +292,6 @@ var newSession = func(
 	s.ctx, s.ctxCancel = context.WithCancel(context.WithValue(context.Background(), SessionTracingKey, tracingID))
 	// Check if the FlowTeleSignal field is populated
 	if s.config.FlowTeleSignal == nil {
-		fmt.Printf("SESSION: Creating AckHandler\n")
 		s.sentPacketHandler, s.receivedPacketHandler = ackhandler.NewAckHandler(
 			0,
 			getMaxPacketSize(s.conn.RemoteAddr()),
@@ -413,6 +418,7 @@ var newClientSession = func(
 		func(token protocol.StatelessResetToken) { runner.AddResetToken(token, s) },
 		runner.RemoveResetToken,
 		s.queueControlFrame,
+		nil,
 	)
 	s.connIDGenerator = newConnIDGenerator(
 		srcConnID,
@@ -540,7 +546,7 @@ func (s *session) SetFixedRate(rateInBitPerSecond uint64) {
 }
 
 func (s *session) ConnectionID() protocol.ConnectionID {
-	return s.handshakeDestConnID
+	return s.connIDManager.Get()
 }
 
 func (s *session) preSetup() {
