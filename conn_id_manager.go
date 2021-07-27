@@ -9,6 +9,10 @@ import (
 	"github.com/lucas-clemente/quic-go/internal/wire"
 )
 
+type ConnectionIDObserver interface {
+	NotifyChanged(oldID, newID protocol.ConnectionID)
+}
+
 type connIDManager struct {
 	queue utils.NewConnectionIDList
 
@@ -24,6 +28,7 @@ type connIDManager struct {
 	rand                   utils.Rand
 	packetsSinceLastChange uint32
 	packetsPerConnectionID uint32
+	connectionIDChanged    func(protocol.ConnectionID, protocol.ConnectionID)
 
 	addStatelessResetToken    func(protocol.StatelessResetToken)
 	removeStatelessResetToken func(protocol.StatelessResetToken)
@@ -35,12 +40,19 @@ func newConnIDManager(
 	addStatelessResetToken func(protocol.StatelessResetToken),
 	removeStatelessResetToken func(protocol.StatelessResetToken),
 	queueControlFrame func(wire.Frame),
+	connectionIDChanged func(oldID, newID protocol.ConnectionID),
 ) *connIDManager {
+
+	if connectionIDChanged == nil {
+		connectionIDChanged = func(oldID, newID protocol.ConnectionID) {}
+	}
+
 	return &connIDManager{
 		activeConnectionID:        initialDestConnID,
 		addStatelessResetToken:    addStatelessResetToken,
 		removeStatelessResetToken: removeStatelessResetToken,
 		queueControlFrame:         queueControlFrame,
+		connectionIDChanged:       connectionIDChanged,
 	}
 }
 
@@ -143,6 +155,7 @@ func (h *connIDManager) updateConnectionID() {
 		h.removeStatelessResetToken(*h.activeStatelessResetToken)
 	}
 
+	old := h.activeConnectionID
 	front := h.queue.Remove(h.queue.Front())
 	h.activeSequenceNumber = front.SequenceNumber
 	h.activeConnectionID = front.ConnectionID
@@ -150,6 +163,8 @@ func (h *connIDManager) updateConnectionID() {
 	h.packetsSinceLastChange = 0
 	h.packetsPerConnectionID = protocol.PacketsPerConnectionID/2 + uint32(h.rand.Int31n(protocol.PacketsPerConnectionID))
 	h.addStatelessResetToken(*h.activeStatelessResetToken)
+	// Notify observers about ConnectionID change
+	h.connectionIDChanged(old, front.ConnectionID)
 }
 
 func (h *connIDManager) Close() {
@@ -164,6 +179,7 @@ func (h *connIDManager) ChangeInitialConnID(newConnID protocol.ConnectionID) {
 	if h.activeSequenceNumber != 0 {
 		panic("expected first connection ID to have sequence number 0")
 	}
+	h.connectionIDChanged(h.activeConnectionID, newConnID)
 	h.activeConnectionID = newConnID
 }
 

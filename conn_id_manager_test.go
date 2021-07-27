@@ -29,7 +29,7 @@ var _ = Describe("Connection ID Manager", func() {
 			func(f wire.Frame,
 			) {
 				frameQueue = append(frameQueue, f)
-			})
+			}, nil)
 	})
 
 	get := func() (protocol.ConnectionID, protocol.StatelessResetToken) {
