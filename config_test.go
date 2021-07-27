@@ -85,6 +85,8 @@ var _ = Describe("Config", func() {
 				f.Set(reflect.ValueOf(mocklogging.NewMockTracer(mockCtrl)))
 			case "FlowTeleSignal":
 				f.Set(reflect.ValueOf(&flowtele.FlowTeleSignal{}))
+			case "Stats":
+				// TODO: Fix test for stats once an struct is implemented. Currently it is only an interface
 			default:
 				Fail(fmt.Sprintf("all fields must be accounted for, but saw unknown field %q", fn))
 			}

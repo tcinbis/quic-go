@@ -80,6 +80,20 @@ func (mr *MockQuicSessionMockRecorder) CloseWithError(arg0, arg1 interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloseWithError", reflect.TypeOf((*MockQuicSession)(nil).CloseWithError), arg0, arg1)
 }
 
+// ConnectionID mocks base method.
+func (m *MockQuicSession) ConnectionID() protocol.ConnectionID {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ConnectionID")
+	ret0, _ := ret[0].(protocol.ConnectionID)
+	return ret0
+}
+
+// ConnectionID indicates an expected call of ConnectionID.
+func (mr *MockQuicSessionMockRecorder) ConnectionID() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConnectionID", reflect.TypeOf((*MockQuicSession)(nil).ConnectionID))
+}
+
 // ConnectionState mocks base method.
 func (m *MockQuicSession) ConnectionState() ConnectionState {
 	m.ctrl.T.Helper()
@@ -343,18 +357,4 @@ func (m *MockQuicSession) shutdown() {
 func (mr *MockQuicSessionMockRecorder) shutdown() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "shutdown", reflect.TypeOf((*MockQuicSession)(nil).shutdown))
-}
-
-// ConnectionId mocks base method
-func (m *MockQuicSession) ConnectionID() protocol.ConnectionID {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ConnectionId")
-	ret0, _ := ret[0].(protocol.ConnectionID)
-	return ret0
-}
-
-// ConnectionId indicates an expected call of ConnectionId
-func (mr *MockQuicSessionMockRecorder) ConnectionID() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConnectionId", reflect.TypeOf((*MockQuicSession)(nil).ConnectionID))
 }

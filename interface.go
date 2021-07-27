@@ -302,7 +302,8 @@ type Config struct {
 	// Datagrams will only be available when both peers enable datagram support.
 	EnableDatagrams bool
 	Tracer          logging.Tracer
-	FlowTeleSignal	*flowtele.FlowTeleSignal
+	FlowTeleSignal  *flowtele.FlowTeleSignal
+	Stats           *ServerStats
 }
 
 // ConnectionState records basic details about a QUIC connection
@@ -330,4 +331,15 @@ type EarlyListener interface {
 	Addr() net.Addr
 	// Accept returns new early sessions. It should be called in a loop.
 	Accept(context.Context) (EarlySession, error)
+}
+
+type ServerStats interface {
+	AddClient(cId protocol.ConnectionID, sess Session)
+	RetireClient(cId protocol.ConnectionID)
+
+	// TODO: Maybe extend it with flow IDs?
+	AddFlow(cId protocol.ConnectionID)
+	RemoveFlow(cId protocol.ConnectionID)
+
+	NotifyChanged(oldID, newID protocol.ConnectionID)
 }
