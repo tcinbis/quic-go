@@ -550,6 +550,10 @@ func (s *session) SetFixedRate(rateInBitPerSecond uint64) {
 	fsph.SetFixedRate(congestion.Bandwidth(rateInBitPerSecond))
 }
 
+func (s *session) BandwidthEstimate() congestion.Bandwidth {
+	return s.sentPacketHandler.BandwidthEstimate()
+}
+
 func (s *session) ConnectionID() protocol.ConnectionID {
 	return s.connIDManager.Get()
 }

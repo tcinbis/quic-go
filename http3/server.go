@@ -151,8 +151,8 @@ func (s *Server) serveImpl(tlsConf *tls.Config, conn net.PacketConn) error {
 	})
 
 	if s.Stats == nil {
-		s.logger.Errorf("http3 stats = nil! Replacing with dummy.")
 		s.Stats = newDummyHTTPStats()
+		s.logger.Errorf("Stats is nil! Replacing with dummy.")
 	}
 
 	// The tls.Config we pass to Listen needs to have the GetConfigForClient callback set.
@@ -215,7 +215,7 @@ func (s *Server) serveImpl(tlsConf *tls.Config, conn net.PacketConn) error {
 			return err
 		}
 		// track session
-		s.Stats.AddClient(quic.StatsClientID(sess.ConnectionID()), sess)
+		s.Stats.AddClient(quic.StatsClientID(sess.ConnectionID().String()), sess)
 		fmt.Printf("Connection ID: %v\n", sess.ConnectionID())
 		go s.handleConn(sess)
 	}
@@ -243,7 +243,7 @@ func (s *Server) SetNewStreamCallback(f func(sess *quic.EarlySession, strID quic
 	s.newStreamCallback = f
 }
 
-func (s *Server) GetSessions() []StatusEntry {
+func (s *Server) GetSessions() []*StatusEntry {
 	return s.Stats.All()
 }
 
@@ -271,7 +271,7 @@ func (s *Server) handleConn(sess quic.EarlySession) {
 			s.logger.Debugf("Accepting stream failed: %s", err)
 			return
 		}
-		s.Stats.AddFlow(quic.StatsClientID(sess.ConnectionID()))
+		s.Stats.AddFlow(quic.StatsClientID(sess.ConnectionID().String()))
 		go func() {
 			// Calling stream callback for newly opened stream
 			if s.newStreamCallback != nil {
@@ -282,7 +282,7 @@ func (s *Server) handleConn(sess quic.EarlySession) {
 			}
 			rerr := s.handleRequest(sess, str, decoder, func() {
 				sess.CloseWithError(quic.ApplicationErrorCode(errorFrameUnexpected), "")
-				s.Stats.RetireClient(quic.StatsClientID(sess.ConnectionID()))
+				s.Stats.RetireClient(quic.StatsClientID(sess.ConnectionID().String()))
 			})
 			if rerr.err != nil || rerr.streamErr != 0 || rerr.connErr != 0 {
 				s.logger.Debugf("Handling request failed: %s", err)
@@ -295,12 +295,13 @@ func (s *Server) handleConn(sess quic.EarlySession) {
 						reason = rerr.err.Error()
 					}
 					sess.CloseWithError(quic.ApplicationErrorCode(rerr.connErr), reason)
-					s.Stats.RetireClient(quic.StatsClientID(sess.ConnectionID()))
+					s.Stats.RetireClient(quic.StatsClientID(sess.ConnectionID().String()))
 				}
 				return
 			}
 			str.Close()
-			s.Stats.RemoveFlow(quic.StatsClientID(sess.ConnectionID()))
+			s.Stats.LastCwnd(quic.StatsClientID(sess.ConnectionID().String()), int(sess.BandwidthEstimate()))
+			s.Stats.RemoveFlow(quic.StatsClientID(sess.ConnectionID().String()))
 		}()
 	}
 }
@@ -328,6 +329,7 @@ func (s *Server) handleUnidirectionalStreams(sess quic.EarlySession) {
 				return
 			case streamTypePushStream: // only the server can push
 				sess.CloseWithError(quic.ApplicationErrorCode(errorStreamCreationError), "")
+				s.Stats.RetireClient(quic.StatsClientID(sess.ConnectionID().String()))
 				return
 			default:
 				str.CancelRead(quic.StreamErrorCode(errorStreamCreationError))
@@ -336,11 +338,13 @@ func (s *Server) handleUnidirectionalStreams(sess quic.EarlySession) {
 			f, err := parseNextFrame(str)
 			if err != nil {
 				sess.CloseWithError(quic.ApplicationErrorCode(errorFrameError), "")
+				s.Stats.RetireClient(quic.StatsClientID(sess.ConnectionID().String()))
 				return
 			}
 			sf, ok := f.(*settingsFrame)
 			if !ok {
 				sess.CloseWithError(quic.ApplicationErrorCode(errorMissingSettings), "")
+				s.Stats.RetireClient(quic.StatsClientID(sess.ConnectionID().String()))
 				return
 			}
 			if !sf.Datagram {
@@ -351,6 +355,7 @@ func (s *Server) handleUnidirectionalStreams(sess quic.EarlySession) {
 			// Note: ConnectionState() will block until the handshake is complete (relevant when using 0-RTT).
 			if s.EnableDatagrams && !sess.ConnectionState().SupportsDatagrams {
 				sess.CloseWithError(quic.ApplicationErrorCode(errorSettingsError), "missing QUIC Datagram support")
+				s.Stats.RetireClient(quic.StatsClientID(sess.ConnectionID().String()))
 			}
 		}(str)
 	}
@@ -392,6 +397,7 @@ func (s *Server) handleRequest(sess quic.Session, str quic.Stream, decoder *qpac
 
 	req.RemoteAddr = sess.RemoteAddr().String()
 	req.Body = newRequestBody(str, onFrameError)
+	s.Stats.LastRequest(quic.StatsClientID(sess.ConnectionID().String()), req.RequestURI)
 
 	if s.logger.Debug() {
 		s.logger.Infof("%s %s%s, on stream %d", req.Method, req.Host, req.RequestURI, str.StreamID())
