@@ -69,6 +69,20 @@ func (mr *MockEarlySessionMockRecorder) AcceptUniStream(arg0 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AcceptUniStream", reflect.TypeOf((*MockEarlySession)(nil).AcceptUniStream), arg0)
 }
 
+// BandwidthEstimate mocks base method.
+func (m *MockEarlySession) BandwidthEstimate() congestion.Bandwidth {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BandwidthEstimate")
+	ret0, _ := ret[0].(congestion.Bandwidth)
+	return ret0
+}
+
+// BandwidthEstimate indicates an expected call of BandwidthEstimate.
+func (mr *MockEarlySessionMockRecorder) BandwidthEstimate() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BandwidthEstimate", reflect.TypeOf((*MockEarlySession)(nil).BandwidthEstimate))
+}
+
 // CloseWithError mocks base method.
 func (m *MockEarlySession) CloseWithError(arg0 qerr.ApplicationErrorCode, arg1 string) error {
 	m.ctrl.T.Helper()
@@ -81,6 +95,20 @@ func (m *MockEarlySession) CloseWithError(arg0 qerr.ApplicationErrorCode, arg1 s
 func (mr *MockEarlySessionMockRecorder) CloseWithError(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloseWithError", reflect.TypeOf((*MockEarlySession)(nil).CloseWithError), arg0, arg1)
+}
+
+// ConnectionID mocks base method.
+func (m *MockEarlySession) ConnectionID() protocol.ConnectionID {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ConnectionID")
+	ret0, _ := ret[0].(protocol.ConnectionID)
+	return ret0
+}
+
+// ConnectionID indicates an expected call of ConnectionID.
+func (mr *MockEarlySessionMockRecorder) ConnectionID() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConnectionID", reflect.TypeOf((*MockEarlySession)(nil).ConnectionID))
 }
 
 // ConnectionState mocks base method.
