@@ -3,6 +3,7 @@ package quic
 import (
 	"context"
 	"errors"
+	"github.com/lucas-clemente/quic-go/internal/congestion"
 	"io"
 	"net"
 	"time"
@@ -200,6 +201,8 @@ type Session interface {
 	ReceiveMessage() ([]byte, error)
 
 	ConnectionID() protocol.ConnectionID
+
+	BandwidthEstimate() congestion.Bandwidth
 }
 
 type FlowTeleSession interface {
@@ -300,10 +303,10 @@ type Config struct {
 	DisableVersionNegotiationPackets bool
 	// See https://datatracker.ietf.org/doc/draft-ietf-quic-datagram/.
 	// Datagrams will only be available when both peers enable datagram support.
-	EnableDatagrams bool
-	Tracer          logging.Tracer
-	FlowTeleSignal  *flowtele.FlowTeleSignal
-	Stats           *ServerStats
+	EnableDatagrams      bool
+	Tracer               logging.Tracer
+	FlowTeleSignal       *flowtele.FlowTeleSignal
+	ConnectionIDObserver func(oldID, newID StatsClientID)
 }
 
 // ConnectionState records basic details about a QUIC connection
@@ -333,7 +336,7 @@ type EarlyListener interface {
 	Accept(context.Context) (EarlySession, error)
 }
 
-type StatsClientID protocol.ConnectionID
+type StatsClientID string
 
 type ServerStats interface {
 	AddClient(cID StatsClientID, sess Session)
@@ -342,6 +345,8 @@ type ServerStats interface {
 	// TODO: Maybe extend it with flow IDs?
 	AddFlow(cID StatsClientID)
 	RemoveFlow(cID StatsClientID)
+
+	LastCwnd(cID StatsClientID, c int)
 
 	NotifyChanged(oldID, newID StatsClientID)
 }

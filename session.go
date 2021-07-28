@@ -266,13 +266,13 @@ var newSession = func(
 		s.logID = destConnID.String()
 	}
 
-	var observerTarget func(oldID, newID StatsClientID) = nil
 	notifyChanged := func(_, _ protocol.ConnectionID) {}
-	if conf.Stats != nil {
-		observerTarget = (*conf.Stats).NotifyChanged
+	if observerTarget := conf.ConnectionIDObserver; observerTarget != nil {
 		notifyChanged = func(oldID, newID protocol.ConnectionID) {
-			observerTarget(StatsClientID(oldID), StatsClientID(newID))
+			observerTarget(StatsClientID(oldID.String()), StatsClientID(newID.String()))
 		}
+	} else {
+		fmt.Println("No observer found in cfg.")
 	}
 
 	s.connIDManager = newConnIDManager(

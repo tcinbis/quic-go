@@ -179,6 +179,10 @@ func (h *sentPacketHandler) DropPackets(encLevel protocol.EncryptionLevel) {
 	h.dropPackets(encLevel)
 }
 
+func (h *sentPacketHandler) BandwidthEstimate() congestion.Bandwidth {
+	return h.congestion.BandwidthEstimate()
+}
+
 func (h *sentPacketHandler) removeFromBytesInFlight(p *Packet) {
 	if p.includedInBytesInFlight {
 		if p.Length > h.bytesInFlight {

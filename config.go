@@ -4,8 +4,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/lucas-clemente/quic-go/internal/utils"
 	"github.com/lucas-clemente/quic-go/internal/protocol"
+	"github.com/lucas-clemente/quic-go/internal/utils"
 )
 
 // Clone clones a Config
@@ -118,6 +118,7 @@ func populateConfig(config *Config) *Config {
 		DisablePathMTUDiscovery:          config.DisablePathMTUDiscovery,
 		DisableVersionNegotiationPackets: config.DisableVersionNegotiationPackets,
 		Tracer:                           config.Tracer,
-		FlowTeleSignal:                        config.FlowTeleSignal, // can be nil if we are not using FlowTele!
+		FlowTeleSignal:                   config.FlowTeleSignal, // can be nil if we are not using FlowTele!
+		ConnectionIDObserver:             config.ConnectionIDObserver,
 	}
 }

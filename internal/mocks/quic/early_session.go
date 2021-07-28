@@ -11,6 +11,8 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	quic "github.com/lucas-clemente/quic-go"
+	congestion "github.com/lucas-clemente/quic-go/internal/congestion"
+	protocol "github.com/lucas-clemente/quic-go/internal/protocol"
 	qerr "github.com/lucas-clemente/quic-go/internal/qerr"
 )
 
