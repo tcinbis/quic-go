@@ -51,6 +51,14 @@ type StatusEntry struct {
 	LastUpdate  time.Time          `json:"last_update"`
 }
 
+type HTTPStats interface {
+	quic.ServerStats
+
+	LastRequest(cID quic.StatsClientID, r string)
+
+	All() []*StatusEntry
+}
+
 func NewStatusEntry(cID quic.StatsClientID, remote net.Addr, sess quic.Session, status Status) *StatusEntry {
 	entry := &StatusEntry{ClientID: cID, Remote: remote, Session: sess, Status: status, LastUpdate: time.Now()}
 	if remote == nil {
@@ -74,14 +82,14 @@ func (s *StatusEntry) String() string {
 	var sb strings.Builder
 	sb.WriteString(
 		fmt.Sprintf(
-			"%s - %s: updated: %s \t %s flows: %d, last req: %s, cwnd: %d MByte",
+			"%s - %s: updated: %s \t %s flows: %d, last req: %s, cwnd: %f MByte",
 			string(s.ClientID),
 			s.Remote.String(),
 			time.Now().Sub(s.LastUpdate).String(),
 			s.Status.String(),
 			s.Flows,
 			s.LastRequest,
-			s.LastCwnd/MByte,
+			float64(s.LastCwnd)/MByte,
 		),
 	)
 
@@ -90,14 +98,6 @@ func (s *StatusEntry) String() string {
 
 func (s *StatusEntry) Updated() {
 	s.LastUpdate = time.Now()
-}
-
-type HTTPStats interface {
-	quic.ServerStats
-
-	LastRequest(cID quic.StatsClientID, r string)
-
-	All() []*StatusEntry
 }
 
 type dummyHTTPStats struct{}
