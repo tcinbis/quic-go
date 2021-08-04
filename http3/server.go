@@ -300,7 +300,6 @@ func (s *Server) handleConn(sess quic.EarlySession) {
 				return
 			}
 			str.Close()
-			s.Stats.LastCwnd(quic.StatsClientID(sess.ConnectionID().String()), int(sess.BandwidthEstimate()))
 			s.Stats.RemoveFlow(quic.StatsClientID(sess.ConnectionID().String()))
 		}()
 	}
@@ -415,6 +414,19 @@ func (s *Server) handleRequest(sess quic.Session, str quic.Stream, decoder *qpac
 			r.Flush()
 		}
 	}()
+
+	go func(c context.Context) {
+		for {
+			select {
+			case <-c.Done():
+				return
+			default:
+				s.Stats.LastCwnd(quic.StatsClientID(sess.ConnectionID().String()), int(sess.BandwidthEstimate()))
+				time.Sleep(10 * time.Millisecond)
+			}
+		}
+	}(ctx)
+
 	handler := s.Handler
 	if handler == nil {
 		handler = http.DefaultServeMux
@@ -444,6 +456,7 @@ func (s *Server) handleRequest(sess quic.Session, str quic.Stream, decoder *qpac
 		// If the EOF was read by the handler, CancelRead() is a no-op.
 		str.CancelRead(quic.StreamErrorCode(errorNoError))
 	}
+
 	return requestError{}
 }
 
