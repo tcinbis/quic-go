@@ -2,6 +2,7 @@ package congestion
 
 import (
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/lucas-clemente/quic-go/flowtele"
@@ -135,10 +136,10 @@ func (c *flowTeleCubicSender) InSlowStart() bool {
 
 func (c *flowTeleCubicSender) GetCongestionWindow() protocol.ByteCount {
 	cwnd := c.congestionWindow
-	//if c.useFixedBandwidth {
-	//	//fmt.Printf("RTT in sec: %f or %s ", float64(c.rttStats.LatestRTT().Seconds()), c.rttStats.LatestRTT().String())
-	//	cwnd = protocol.ByteCount(math.Max((float64(c.fixedBandwidth) * float64(c.rttStats.SmoothedRTT().Seconds())), 1))
-	//}
+	if c.useFixedBandwidth {
+		//	//fmt.Printf("RTT in sec: %f or %s ", float64(c.rttStats.LatestRTT().Seconds()), c.rttStats.LatestRTT().String())
+		cwnd = protocol.ByteCount(math.Max((float64(c.fixedBandwidth) * float64(c.rttStats.SmoothedRTT().Seconds())), 1))
+	}
 	return cwnd
 }
 
@@ -245,15 +246,15 @@ func (c *flowTeleCubicSender) isCwndLimited(bytesInFlight protocol.ByteCount) bo
 
 // BandwidthEstimate returns the current bandwidth estimate
 func (c *flowTeleCubicSender) BandwidthEstimate() Bandwidth {
+	if c.useFixedBandwidth {
+		// if a fixed bandwidth is set return it
+		return c.fixedBandwidth * BitsPerSecond
+	}
+
 	srtt := c.rttStats.SmoothedRTT()
 	if srtt == 0 {
 		// If we haven't measured an rtt, the bandwidth estimate is unknown.
 		return infBandwidth
-	}
-
-	if c.useFixedBandwidth {
-		// if a fixed bandwidth is set return it
-		return c.fixedBandwidth * BitsPerSecond
 	}
 
 	return BandwidthFromDelta(c.GetCongestionWindow(), srtt)
