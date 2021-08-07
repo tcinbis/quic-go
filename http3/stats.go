@@ -40,7 +40,6 @@ const (
 )
 
 type StatusEntry struct {
-	//Mtx 		sync.RWMutex
 	ClientID    quic.StatsClientID `json:"client_id"`
 	Remote      net.Addr           `json:"remote_addr"`
 	Session     quic.Session       `json:"-"`
@@ -82,7 +81,7 @@ func (s *StatusEntry) String() string {
 	var sb strings.Builder
 	sb.WriteString(
 		fmt.Sprintf(
-			"%s - %s: updated: %s \t %s flows: %d, last req: %s, cwnd: %f MByte",
+			"%s - %s: updated: %s \t %s flows: %d, last req: %s, cwnd: %.2f MByte",
 			string(s.ClientID),
 			s.Remote.String(),
 			time.Now().Sub(s.LastUpdate).String(),

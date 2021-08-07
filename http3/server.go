@@ -396,7 +396,8 @@ func (s *Server) handleRequest(sess quic.Session, str quic.Stream, decoder *qpac
 
 	req.RemoteAddr = sess.RemoteAddr().String()
 	req.Body = newRequestBody(str, onFrameError)
-	s.Stats.LastRequest(quic.StatsClientID(sess.ConnectionID().String()), req.RequestURI)
+	uri := strings.Split(req.RequestURI, "/")
+	s.Stats.LastRequest(quic.StatsClientID(sess.ConnectionID().String()), uri[len(uri)-1])
 
 	if s.logger.Debug() {
 		s.logger.Infof("%s %s%s, on stream %d", req.Method, req.Host, req.RequestURI, str.StreamID())
