@@ -183,6 +183,10 @@ func (h *sentPacketHandler) BandwidthEstimate() congestion.Bandwidth {
 	return h.congestion.BandwidthEstimate()
 }
 
+func (h *sentPacketHandler) MigrateConnection() {
+	h.congestion.OnConnectionMigration()
+}
+
 func (h *sentPacketHandler) removeFromBytesInFlight(p *Packet) {
 	if p.includedInBytesInFlight {
 		if p.Length > h.bytesInFlight {

@@ -554,8 +554,12 @@ func (s *session) BandwidthEstimate() congestion.Bandwidth {
 	return s.sentPacketHandler.BandwidthEstimate()
 }
 
+func (s *session) MigrateConnection() {
+	s.sentPacketHandler.MigrateConnection()
+}
+
 func (s *session) ConnectionID() protocol.ConnectionID {
-	return s.connIDManager.Get()
+	return s.connIDManager.GetActive()
 }
 
 func (s *session) preSetup() {

@@ -132,6 +132,18 @@ func (mr *MockSendAlgorithmWithDebugInfosMockRecorder) MaybeExitSlowStart() *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MaybeExitSlowStart", reflect.TypeOf((*MockSendAlgorithmWithDebugInfos)(nil).MaybeExitSlowStart))
 }
 
+// OnConnectionMigration mocks base method.
+func (m *MockSendAlgorithmWithDebugInfos) OnConnectionMigration() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "OnConnectionMigration")
+}
+
+// OnConnectionMigration indicates an expected call of OnConnectionMigration.
+func (mr *MockSendAlgorithmWithDebugInfosMockRecorder) OnConnectionMigration() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnConnectionMigration", reflect.TypeOf((*MockSendAlgorithmWithDebugInfos)(nil).OnConnectionMigration))
+}
+
 // OnPacketAcked mocks base method.
 func (m *MockSendAlgorithmWithDebugInfos) OnPacketAcked(arg0 protocol.PacketNumber, arg1, arg2 protocol.ByteCount, arg3 time.Time) {
 	m.ctrl.T.Helper()

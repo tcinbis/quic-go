@@ -54,6 +54,7 @@ type SentPacketHandler interface {
 	OnLossDetectionTimeout() error
 
 	BandwidthEstimate() congestion.Bandwidth
+	MigrateConnection()
 }
 
 type sentPacketTracker interface {

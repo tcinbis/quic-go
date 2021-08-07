@@ -92,6 +92,18 @@ func (mr *MockSentPacketHandlerMockRecorder) HasPacingBudget() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasPacingBudget", reflect.TypeOf((*MockSentPacketHandler)(nil).HasPacingBudget))
 }
 
+// MigrateConnection mocks base method.
+func (m *MockSentPacketHandler) MigrateConnection() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "MigrateConnection")
+}
+
+// MigrateConnection indicates an expected call of MigrateConnection.
+func (mr *MockSentPacketHandlerMockRecorder) MigrateConnection() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MigrateConnection", reflect.TypeOf((*MockSentPacketHandler)(nil).MigrateConnection))
+}
+
 // OnLossDetectionTimeout mocks base method.
 func (m *MockSentPacketHandler) OnLossDetectionTimeout() error {
 	m.ctrl.T.Helper()

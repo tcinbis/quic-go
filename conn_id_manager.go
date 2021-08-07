@@ -218,6 +218,10 @@ func (h *connIDManager) Get() protocol.ConnectionID {
 	return h.activeConnectionID
 }
 
+func (h *connIDManager) GetActive() protocol.ConnectionID {
+	return h.activeConnectionID
+}
+
 func (h *connIDManager) SetHandshakeComplete() {
 	h.handshakeComplete = true
 }

@@ -179,6 +179,18 @@ func (mr *MockQuicSessionMockRecorder) LocalAddr() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LocalAddr", reflect.TypeOf((*MockQuicSession)(nil).LocalAddr))
 }
 
+// MigrateConnection mocks base method.
+func (m *MockQuicSession) MigrateConnection() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "MigrateConnection")
+}
+
+// MigrateConnection indicates an expected call of MigrateConnection.
+func (mr *MockQuicSessionMockRecorder) MigrateConnection() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MigrateConnection", reflect.TypeOf((*MockQuicSession)(nil).MigrateConnection))
+}
+
 // NextSession mocks base method.
 func (m *MockQuicSession) NextSession() Session {
 	m.ctrl.T.Helper()

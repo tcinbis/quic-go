@@ -203,6 +203,8 @@ type Session interface {
 	ConnectionID() protocol.ConnectionID
 
 	BandwidthEstimate() congestion.Bandwidth
+
+	MigrateConnection()
 }
 
 type FlowTeleSession interface {
