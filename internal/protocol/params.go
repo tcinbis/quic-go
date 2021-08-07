@@ -6,7 +6,7 @@ import "time"
 const DesiredReceiveBufferSize = (1 << 20) * 2 // 2 MB
 
 // InitialPacketSizeIPv4 is the maximum packet size that we use for sending IPv4 packets.
-const InitialPacketSizeIPv4 = 1252
+const InitialPacketSizeIPv4 = 1231 // TODO: Change back to 1252. But with SCION it looks as if we are using IPv4 but we are not
 
 // InitialPacketSizeIPv6 is the maximum packet size that we use for sending IPv6 packets.
 const InitialPacketSizeIPv6 = 1232

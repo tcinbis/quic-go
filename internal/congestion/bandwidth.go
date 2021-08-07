@@ -20,6 +20,7 @@ const (
 )
 
 // BandwidthFromDelta calculates the bandwidth from a number of bytes and a time delta
+// Unit being returned is Bits. We multiply by time.Second because time.Duration is measured in Nanoseconds by default.
 func BandwidthFromDelta(bytes protocol.ByteCount, delta time.Duration) Bandwidth {
 	return Bandwidth(bytes) * Bandwidth(time.Second) / Bandwidth(delta) * BytesPerSecond
 }
