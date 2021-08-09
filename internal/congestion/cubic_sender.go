@@ -307,7 +307,7 @@ func (c *cubicSender) maybeTraceStateChange(new logging.CongestionState) {
 func (c *cubicSender) SetMaxDatagramSize(s protocol.ByteCount) {
 	if s < c.maxDatagramSize {
 		fmt.Fprintf(os.Stderr, fmt.Sprintf("!!!!!! congestion BUG: decreased max datagram size from %d to %d !!!!!!", c.maxDatagramSize, s))
-		//panic(fmt.Sprintf("congestion BUG: decreased max datagram size from %d to %d", c.maxDatagramSize, s))
+		panic(fmt.Sprintf("congestion BUG: decreased max datagram size from %d to %d", c.maxDatagramSize, s))
 	}
 	cwndIsMinCwnd := c.congestionWindow == c.minCongestionWindow()
 	c.maxDatagramSize = s
