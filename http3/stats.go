@@ -112,14 +112,15 @@ func (s *sampleQueue) MarshalText() ([]byte, error) {
 }
 
 type StatusEntry struct {
-	ClientID    quic.StatsClientID `json:"client_id"`
-	Remote      net.Addr           `json:"remote_addr"`
-	Session     quic.Session       `json:"-"`
-	Status      Status             `json:"status"`
-	Flows       int                `json:"flows"`
-	LastRequest string             `json:"last_request"`
-	LastCwnd    SampleQueue        `json:"last_cwnd"`
-	LastUpdate  time.Time          `json:"last_update"`
+	InitialClientID quic.StatsClientID `json:"initial_client_id"`
+	ClientID        quic.StatsClientID `json:"client_id"`
+	Remote          net.Addr           `json:"remote_addr"`
+	Session         quic.Session       `json:"-"`
+	Status          Status             `json:"status"`
+	Flows           int                `json:"flows"`
+	LastRequest     string             `json:"last_request"`
+	LastCwnd        SampleQueue        `json:"last_cwnd"`
+	LastUpdate      time.Time          `json:"last_update"`
 }
 
 type HTTPStats interface {
@@ -131,7 +132,7 @@ type HTTPStats interface {
 }
 
 func NewStatusEntry(cID quic.StatsClientID, remote net.Addr, sess quic.Session, status Status) *StatusEntry {
-	entry := &StatusEntry{ClientID: cID, Remote: remote, Session: sess, Status: status, LastUpdate: time.Now(), LastCwnd: NewSampleQueue(200)}
+	entry := &StatusEntry{InitialClientID: cID, ClientID: cID, Remote: remote, Session: sess, Status: status, LastUpdate: time.Now(), LastCwnd: NewSampleQueue(200)}
 	if remote == nil {
 		entry.Remote = &net.UDPAddr{}
 		go checkForRemoteAvailable(sess, entry)
@@ -153,7 +154,8 @@ func (s *StatusEntry) String() string {
 	var sb strings.Builder
 	sb.WriteString(
 		fmt.Sprintf(
-			"%s - %s: updated: %s \t %s flows: %d, last req: %s, cwnd: %.2f MByte",
+			"%s-%s - %s: updated: %s \t %s flows: %d, last req: %s, cwnd: %.2f MByte",
+			string(s.InitialClientID),
 			string(s.ClientID),
 			s.Remote.String(),
 			time.Now().Sub(s.LastUpdate).String(),
