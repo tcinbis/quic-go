@@ -249,7 +249,7 @@ var newSession = func(
 ) quicSession {
 	s := &session{
 		conn:                  conn,
-		config:                conf,
+		config:                conf.Clone(),
 		handshakeDestConnID:   destConnID,
 		srcConnIDLen:          srcConnID.Len(),
 		tokenGenerator:        tokenGenerator,
