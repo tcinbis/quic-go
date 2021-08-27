@@ -248,9 +248,14 @@ var newSession = func(
 	v protocol.VersionNumber,
 ) quicSession {
 	// TODO: Fix dirty hack which explicitly clones the FlowTeleSignal interface pointer such that every session has it's unique pointer!
-	clonedConf := conf.Clone()
-	fs := *clonedConf.FlowTeleSignal
-	clonedConf.FlowTeleSignal = &fs
+	var clonedConf *Config
+	if conf.FlowTeleSignal != nil {
+		clonedConf = conf.Clone()
+		fs := *clonedConf.FlowTeleSignal
+		clonedConf.FlowTeleSignal = &fs
+	} else {
+		clonedConf = conf
+	}
 
 	s := &session{
 		conn:                  conn,
