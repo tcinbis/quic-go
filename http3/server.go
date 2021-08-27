@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"net/http"
 	"runtime"
@@ -215,8 +216,15 @@ func (s *Server) serveImpl(tlsConf *tls.Config, conn net.PacketConn) error {
 			return err
 		}
 		// track session
-		s.Stats.AddClient(quic.StatsClientID(sess.ConnectionID().String()), sess)
-		fmt.Printf("Connection ID: %v\n", sess.ConnectionID())
+		initialID := sess.ConnectionID().String()
+		s.Stats.AddClient(quic.StatsClientID(initialID), sess)
+		fmt.Printf("Connection ID: %v\n", initialID)
+		if flowteleSess, ok := sess.(quic.FlowTeleSession); ok {
+			err = quicConf.NewSessionCallback(initialID, flowteleSess)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
 		go s.handleConn(sess)
 	}
 }
