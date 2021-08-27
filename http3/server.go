@@ -220,12 +220,15 @@ func (s *Server) serveImpl(tlsConf *tls.Config, conn net.PacketConn) error {
 		s.Stats.AddClient(quic.StatsClientID(initialID), sess)
 		fmt.Printf("Connection ID: %v\n", initialID)
 		if flowteleSess, ok := sess.(quic.FlowTeleSession); ok {
-			err = quicConf.NewSessionCallback(initialID, flowteleSess)
+			ctx, cancelLoggers := context.WithCancel(context.Background())
+			err = quicConf.NewSessionCallback(ctx, initialID, flowteleSess)
 			if err != nil {
 				log.Fatal(err)
 			}
+			go s.handleCtxConn(sess, cancelLoggers)
+		} else {
+			go s.handleConn(sess)
 		}
-		go s.handleConn(sess)
 	}
 }
 
@@ -253,6 +256,11 @@ func (s *Server) SetNewStreamCallback(f func(sess *quic.EarlySession, strID quic
 
 func (s *Server) GetSessions() []*StatusEntry {
 	return s.Stats.All()
+}
+
+func (s *Server) handleCtxConn(sess quic.EarlySession, cancelCtx func()) {
+	defer cancelCtx()
+	s.handleConn(sess)
 }
 
 func (s *Server) handleConn(sess quic.EarlySession) {

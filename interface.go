@@ -309,7 +309,7 @@ type Config struct {
 	Tracer               logging.Tracer
 	FlowTeleSignal       *flowtele.FlowTeleSignal
 	ConnectionIDObserver func(oldID, newID StatsClientID)
-	NewSessionCallback   func(connectionID string, session FlowTeleSession) error
+	NewSessionCallback   func(ctx context.Context, connectionID string, session FlowTeleSession) error
 }
 
 // ConnectionState records basic details about a QUIC connection
