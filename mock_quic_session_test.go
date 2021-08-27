@@ -137,6 +137,20 @@ func (mr *MockQuicSessionMockRecorder) Context() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Context", reflect.TypeOf((*MockQuicSession)(nil).Context))
 }
 
+// GetConfig mocks base method.
+func (m *MockQuicSession) GetConfig() *Config {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetConfig")
+	ret0, _ := ret[0].(*Config)
+	return ret0
+}
+
+// GetConfig indicates an expected call of GetConfig.
+func (mr *MockQuicSessionMockRecorder) GetConfig() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConfig", reflect.TypeOf((*MockQuicSession)(nil).GetConfig))
+}
+
 // GetVersion mocks base method.
 func (m *MockQuicSession) GetVersion() protocol.VersionNumber {
 	m.ctrl.T.Helper()

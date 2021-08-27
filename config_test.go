@@ -87,6 +87,8 @@ var _ = Describe("Config", func() {
 				f.Set(reflect.ValueOf(&flowtele.FlowTeleSignal{}))
 			case "ConnectionIDObserver":
 				// TODO: Fix test for stats once an struct is implemented. Currently it is only an interface
+			case "NewSessionCallback":
+				// TODO: Fix test for stats once an struct is implemented. Currently it is only an interface
 			default:
 				Fail(fmt.Sprintf("all fields must be accounted for, but saw unknown field %q", fn))
 			}
