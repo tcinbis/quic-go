@@ -120,5 +120,6 @@ func populateConfig(config *Config) *Config {
 		Tracer:                           config.Tracer,
 		FlowTeleSignal:                   config.FlowTeleSignal, // can be nil if we are not using FlowTele!
 		ConnectionIDObserver:             config.ConnectionIDObserver,
+		NewSessionCallback:               config.NewSessionCallback,
 	}
 }

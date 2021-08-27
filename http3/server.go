@@ -221,7 +221,7 @@ func (s *Server) serveImpl(tlsConf *tls.Config, conn net.PacketConn) error {
 		fmt.Printf("Connection ID: %v\n", initialID)
 		if flowteleSess, ok := sess.(quic.FlowTeleSession); ok {
 			ctx, cancelLoggers := context.WithCancel(context.Background())
-			err = quicConf.NewSessionCallback(ctx, initialID, flowteleSess)
+			err = sess.GetConfig().NewSessionCallback(ctx, initialID, flowteleSess)
 			if err != nil {
 				log.Fatal(err)
 			}

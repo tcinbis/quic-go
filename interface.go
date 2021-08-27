@@ -205,6 +205,8 @@ type Session interface {
 	BandwidthEstimate() congestion.Bandwidth
 
 	MigrateConnection()
+
+	GetConfig() *Config
 }
 
 type FlowTeleSession interface {

@@ -139,6 +139,20 @@ func (mr *MockEarlySessionMockRecorder) Context() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Context", reflect.TypeOf((*MockEarlySession)(nil).Context))
 }
 
+// GetConfig mocks base method.
+func (m *MockEarlySession) GetConfig() *quic.Config {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetConfig")
+	ret0, _ := ret[0].(*quic.Config)
+	return ret0
+}
+
+// GetConfig indicates an expected call of GetConfig.
+func (mr *MockEarlySessionMockRecorder) GetConfig() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConfig", reflect.TypeOf((*MockEarlySession)(nil).GetConfig))
+}
+
 // HandshakeComplete mocks base method.
 func (m *MockEarlySession) HandshakeComplete() context.Context {
 	m.ctrl.T.Helper()
