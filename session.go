@@ -247,9 +247,14 @@ var newSession = func(
 	logger utils.Logger,
 	v protocol.VersionNumber,
 ) quicSession {
+	// TODO: Fix dirty hack which explicitly clones the FlowTeleSignal interface pointer such that every session has it's unique pointer!
+	clonedConf := conf.Clone()
+	fs := *clonedConf.FlowTeleSignal
+	clonedConf.FlowTeleSignal = &fs
+
 	s := &session{
 		conn:                  conn,
-		config:                conf.Clone(),
+		config:                clonedConf,
 		handshakeDestConnID:   destConnID,
 		srcConnIDLen:          srcConnID.Len(),
 		tokenGenerator:        tokenGenerator,
