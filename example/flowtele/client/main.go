@@ -8,8 +8,6 @@ import (
 	"io"
 	"log"
 	"net"
-
-	//quic "quic-go"
 	"time"
 
 	"github.com/lucas-clemente/quic-go"
@@ -18,16 +16,16 @@ import (
 const messageSize = 10000000
 
 var (
-	remoteIpFlag   = flag.String("ip", "127.0.0.1", "IP address to connect to.")
+	remoteIPFlag   = flag.String("ip", "127.0.0.1", "IP address to connect to.")
 	remotePortFlag = flag.Int("port", 5500, "Port number to connect to.")
-	localIpFlag    = flag.String("local-ip", "", "IP address to listen on.")
+	localIPFlag    = flag.String("local-ip", "", "IP address to listen on.")
 	localPortFlag  = flag.Int("local-port", 0, "Port number to listen on.")
 )
 
 func main() {
 	flag.Parse()
-	rAddr := &net.UDPAddr{IP: net.ParseIP(*remoteIpFlag), Port: *remotePortFlag}
-	lAddr := &net.UDPAddr{IP: net.ParseIP(*localIpFlag), Port: *localPortFlag}
+	rAddr := &net.UDPAddr{IP: net.ParseIP(*remoteIPFlag), Port: *remotePortFlag}
+	lAddr := &net.UDPAddr{IP: net.ParseIP(*localIPFlag), Port: *localPortFlag}
 	startSession(rAddr, lAddr)
 }
 
@@ -65,15 +63,18 @@ func startSession(rAddr *net.UDPAddr, lAddr *net.UDPAddr) {
 	}
 	fmt.Printf("Stream opened.\n")
 	_, err = stream.Write([]byte("Hello"))
+	if err != nil {
+		fmt.Printf("Error writing: %v\n", err)
+	}
 	checkQuicError("Listening", listenOnStream(session, stream))
 }
 
 func getPort(addr net.Addr) (int, error) {
-	switch addr.(type) {
+	switch addr := addr.(type) {
 	case *net.UDPAddr:
-		return addr.(*net.UDPAddr).Port, nil
+		return addr.Port, nil
 	default:
-		return 0, fmt.Errorf("Unknown address type")
+		return 0, fmt.Errorf("unknown address type")
 	}
 }
 
@@ -101,7 +102,7 @@ func listenOnStream(session quic.Session, stream quic.Stream) error {
 				// sender stopped sending
 				return nil
 			} else {
-				return fmt.Errorf("Error reading message: %s\n", err)
+				return fmt.Errorf("error reading message: %s", err)
 			}
 		}
 		tEnd := time.Now()
@@ -116,7 +117,7 @@ func listenOnStream(session quic.Session, stream quic.Stream) error {
 }
 
 // checks for common quic errors, returns true if okay (no error)
-func checkQuicError(errItem string, err error) bool {
+func checkQuicError(errItem string, err error) {
 	if err != nil {
 		if err == io.EOF {
 			log.Printf("%s end of file.\n", errItem)
@@ -128,7 +129,5 @@ func checkQuicError(errItem string, err error) bool {
 			log.Printf("UNKNOWN ERROR: for %s; %v", errItem, err)
 			panic(err)
 		}
-		return false
 	}
-	return true
 }

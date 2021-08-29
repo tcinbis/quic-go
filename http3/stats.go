@@ -2,11 +2,12 @@ package http3
 
 import (
 	"fmt"
-	"github.com/lucas-clemente/quic-go"
 	"net"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/lucas-clemente/quic-go"
 )
 
 type Status int
@@ -22,7 +23,7 @@ func (s Status) String() string {
 	case Unknown:
 		fallthrough
 	default:
-		return "Unkown"
+		return "Unknown"
 	}
 }
 
@@ -158,11 +159,11 @@ func (s *StatusEntry) String() string {
 			string(s.InitialClientID),
 			string(s.ClientID),
 			s.Remote.String(),
-			time.Now().Sub(s.LastUpdate).String(),
+			time.Since(s.LastUpdate).String(),
 			s.Status.String(),
 			s.Flows,
 			s.LastRequest,
-			float64(s.LastCwnd.Mean())/MByte,
+			s.LastCwnd.Mean()/MByte,
 		),
 	)
 

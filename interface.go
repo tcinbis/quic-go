@@ -3,12 +3,12 @@ package quic
 import (
 	"context"
 	"errors"
-	"github.com/lucas-clemente/quic-go/internal/congestion"
 	"io"
 	"net"
 	"time"
 
 	"github.com/lucas-clemente/quic-go/flowtele"
+	"github.com/lucas-clemente/quic-go/internal/congestion"
 	"github.com/lucas-clemente/quic-go/internal/handshake"
 	"github.com/lucas-clemente/quic-go/internal/protocol"
 	"github.com/lucas-clemente/quic-go/logging"

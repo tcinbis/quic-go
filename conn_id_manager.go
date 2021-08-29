@@ -42,7 +42,6 @@ func newConnIDManager(
 	queueControlFrame func(wire.Frame),
 	connectionIDChanged func(oldID, newID protocol.ConnectionID),
 ) *connIDManager {
-
 	if connectionIDChanged == nil {
 		connectionIDChanged = func(oldID, newID protocol.ConnectionID) {}
 	}

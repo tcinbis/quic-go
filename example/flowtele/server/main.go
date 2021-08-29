@@ -13,33 +13,22 @@ import (
 	"log"
 	"math/big"
 	"net"
-
-	"github.com/lucas-clemente/quic-go/interop/utils"
-
-	//quic "quic-go"
 	"time"
 
-	"github.com/lucas-clemente/quic-go/flowtele"
-
 	"github.com/lucas-clemente/quic-go"
+	"github.com/lucas-clemente/quic-go/flowtele"
+	"github.com/lucas-clemente/quic-go/interop/utils"
 )
 
 var (
-	remoteIpFlag   = flag.String("ip", "127.0.0.1", "IP address to connect to.")
-	remotePortFlag = flag.Int("port", 5500, "Port number to connect to.")
-	localIpFlag    = flag.String("local-ip", "", "IP address to listen on.")
-	localPortFlag  = flag.Int("local-port", 5500, "Port number to listen on.")
+	localIPFlag   = flag.String("local-ip", "", "IP address to listen on.")
+	localPortFlag = flag.Int("local-port", 5500, "Port number to listen on.")
 )
 
 const (
 	Bit  = 1
 	KBit = 1000 * Bit
 	MBit = 1000 * KBit
-	GBit = 1000 * MBit
-
-	Byte  = 8 * Bit
-	KByte = 1000 * Byte
-	MByte = 1000 * KByte
 )
 
 func main() {
@@ -48,27 +37,26 @@ func main() {
 
 func setupFlowTeleSignaling() *flowtele.FlowTeleSignal {
 	newSrttMeasurement := func(t time.Time, srtt time.Duration) {
-		//fmt.Printf("SRTT: %s\n", t.Format("2006-01-02 15:04:05"), srtt.String())
+		// fmt.Printf("SRTT: %s\n", t.Format("2006-01-02 15:04:05"), srtt.String())
 	}
 	packetsLost := func(t time.Time, newSlowStartThreshold uint64) {
-		//fmt.Printf("Packet LOST at %d.\n", t.Format("2006-01-02 15:04:05"))
+		// fmt.Printf("Packet LOST at %d.\n", t.Format("2006-01-02 15:04:05"))
 	}
 	packetsLostRatio := func(t time.Time, lostRatio float64) {}
 	packetsAcked := func(t time.Time, congestionWindow uint64, packetsInFlight uint64, ackedBytes uint64) {
-		//fmt.Printf("ACKED \t cwnd: %d \t inFlight: %d \t ackedBytes: %d\n", congestionWindow, packetsInFlight, ackedBytes)
+		// fmt.Printf("ACKED \t cwnd: %d \t inFlight: %d \t ackedBytes: %d\n", congestionWindow, packetsInFlight, ackedBytes)
 	}
 
 	return flowtele.CreateFlowteleSignalInterface(newSrttMeasurement, packetsLost, packetsLostRatio, packetsAcked)
 }
 
 func startSession() {
-
 	quicConf := quic.Config{
 		KeepAlive:      true,
 		FlowTeleSignal: setupFlowTeleSignaling(),
 	}
 
-	lAddr := &net.UDPAddr{IP: net.ParseIP(*localIpFlag), Port: *localPortFlag}
+	lAddr := &net.UDPAddr{IP: net.ParseIP(*localIPFlag), Port: *localPortFlag}
 	fmt.Printf("Listening on: %s\n", lAddr)
 	conn, err := net.ListenUDP("udp", lAddr)
 	if err != nil {

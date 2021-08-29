@@ -60,6 +60,7 @@ func NewFlowTeleCubicSender(
 	}
 	return c
 }
+
 func (c *flowTeleCubicSender) adjustCongestionWindow() {
 	flowteleCubic := c.checkFlowTeleCubicAlgorithm()
 
@@ -138,7 +139,7 @@ func (c *flowTeleCubicSender) GetCongestionWindow() protocol.ByteCount {
 	cwnd := c.congestionWindow
 	if c.useFixedBandwidth {
 		//	//fmt.Printf("RTT in sec: %f or %s ", float64(c.rttStats.LatestRTT().Seconds()), c.rttStats.LatestRTT().String())
-		cwnd = protocol.ByteCount(math.Max((float64(c.fixedBandwidth) * float64(c.rttStats.SmoothedRTT().Seconds())), 1))
+		cwnd = protocol.ByteCount(math.Max(float64(c.fixedBandwidth)*c.rttStats.SmoothedRTT().Seconds(), 1))
 	}
 	return cwnd
 }
