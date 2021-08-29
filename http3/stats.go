@@ -132,7 +132,7 @@ type HTTPStats interface {
 }
 
 func NewStatusEntry(cID quic.StatsClientID, remote net.Addr, sess quic.Session, status Status) *StatusEntry {
-	entry := &StatusEntry{InitialClientID: cID, ClientID: cID, Remote: remote, Session: sess, Status: status, LastUpdate: time.Now(), LastCwnd: NewSampleQueue(200)}
+	entry := &StatusEntry{InitialClientID: cID, ClientID: cID, Remote: remote, Session: sess, Status: status, LastUpdate: time.Now(), LastCwnd: NewSampleQueue(50)}
 	if remote == nil {
 		entry.Remote = &net.UDPAddr{}
 		go checkForRemoteAvailable(sess, entry)
