@@ -219,9 +219,9 @@ func (s *Server) serveImpl(tlsConf *tls.Config, conn net.PacketConn) error {
 		initialID := sess.ConnectionID().String()
 		s.Stats.AddClient(quic.StatsClientID(initialID), sess)
 		fmt.Printf("Connection ID: %v\n", initialID)
-		if flowteleSess, ok := sess.(quic.FlowTeleSession); ok {
+		if flowteleSess, ok := sess.(quic.FlowTeleSession); ok && flowteleSess.GetConfig().NewSessionCallback != nil {
 			ctx, cancelLoggers := context.WithCancel(context.Background())
-			err = sess.GetConfig().NewSessionCallback(ctx, initialID, flowteleSess)
+			err = flowteleSess.GetConfig().NewSessionCallback(ctx, initialID, flowteleSess)
 			if err != nil {
 				log.Fatal(err)
 			}
