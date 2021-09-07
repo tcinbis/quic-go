@@ -65,7 +65,6 @@ func (c *flowTeleCubicSender) adjustCongestionWindow() {
 	flowteleCubic := c.checkFlowTeleCubicAlgorithm()
 
 	if flowteleCubic.cwndAddDelta != 0 {
-		fmt.Printf("FLOWTELE CC: add cwndAddDelta %d to congestion window %d\n", flowteleCubic.cwndAddDelta, c.congestionWindow)
 		c.congestionWindow = utils.MaxByteCount(
 			c.minCongestionWindow(),
 			utils.MinByteCount(
